@@ -1428,6 +1428,222 @@ button { font-family: inherit; cursor: pointer; }
 .board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 /* =========================================================
+   Premium card frame — tier-graded metals, beveled borders,
+   faceted CSS gemstones, embossed nameplate
+   ========================================================= */
+
+/* Per-tier metal palette (used for frame highlights / lowlights) */
+.card[data-tier="1"] {
+  --metal-1: #d29e6b;   /* bronze */
+  --metal-2: #6b3b1c;
+  --metal-hi: #ffd9aa;
+  --metal-lo: #2c1306;
+  --frame-glow: rgba(210, 140, 60, 0.35);
+}
+.card[data-tier="2"] {
+  --metal-1: #cad6e8;   /* silver */
+  --metal-2: #4a5a72;
+  --metal-hi: #ffffff;
+  --metal-lo: #1a2030;
+  --frame-glow: rgba(170, 200, 255, 0.4);
+}
+.card[data-tier="3"] {
+  --metal-1: #ffd87a;   /* gold */
+  --metal-2: #8a6010;
+  --metal-hi: #fff7c8;
+  --metal-lo: #2a1700;
+  --frame-glow: rgba(255, 200, 80, 0.55);
+}
+
+/* Multi-layer beveled metal frame on every card */
+.card {
+  border: 1px solid var(--metal-2, #2c1c4a);
+  box-shadow:
+    inset 0 0 0 1px var(--metal-1, rgba(180,140,80,0.6)),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 6px 14px rgba(0, 0, 0, 0.55),
+    0 0 0 1px var(--metal-lo, rgba(0,0,0,0.6));
+}
+
+/* Inner art panel — recessed look behind the emoji */
+.card .card-art {
+  border-radius: 4px;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.10), transparent 65%),
+    linear-gradient(180deg, rgba(0,0,0,0.30), rgba(0,0,0,0.55));
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 14px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  margin: 4px 2px 5px;
+  padding: 2px 0;
+}
+
+/* Faceted gemstone for the bonus indicator (top-left) */
+.card-bonus {
+  position: relative;
+  width: 22px; height: 22px;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 28%, 88% 100%, 12% 100%, 0 28%);
+  background:
+    linear-gradient(150deg, rgba(255,255,255,0.50) 0%, rgba(255,255,255,0.10) 25%, transparent 55%),
+    linear-gradient(180deg, var(--gem-1, #ff3b3b), var(--gem-2, #800));
+  font-size: 10px;
+  color: rgba(255,255,255,0.96);
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.65), 0 1px 1px rgba(0,0,0,0.5);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+  display: flex; align-items: center; justify-content: center;
+  padding-top: 1px;
+}
+.card-bonus[data-stone="mind"] { color: #2a2000; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+.card .card-bonus[data-stone="power"] { --gem-1: #ff7676; --gem-2: #6b0010; color: #fff; text-shadow: 0 -1px 0 rgba(0,0,0,0.7); }
+.card .card-bonus[data-stone="space"] { --gem-1: #7cc1ff; --gem-2: #002b6b; color: #fff; text-shadow: 0 -1px 0 rgba(0,0,0,0.7); }
+.card .card-bonus[data-stone="time"]  { --gem-1: #76ffb1; --gem-2: #006b2f; color: #fff; text-shadow: 0 -1px 0 rgba(0,0,0,0.7); }
+.card .card-bonus[data-stone="mind"]  { --gem-1: #ffe27c; --gem-2: #6b4f00; color: #2a2000; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+.card .card-bonus[data-stone="soul"]  { --gem-1: #d99cff; --gem-2: #4a0080; color: #fff; text-shadow: 0 -1px 0 rgba(0,0,0,0.7); }
+
+/* Cost gems — small faceted versions of the bonus gem */
+.cost-pip {
+  position: relative;
+  width: 16px; height: 16px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(150deg, rgba(255,255,255,0.55), transparent 50%),
+    linear-gradient(180deg, var(--gem-1, #888), var(--gem-2, #333));
+  clip-path: polygon(50% 0, 100% 28%, 88% 100%, 12% 100%, 0 28%);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding-top: 2px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+  text-shadow: 0 1px 1px rgba(0,0,0,0.7);
+}
+.cost-pip[data-stone="power"]   { --gem-1: #ff7676; --gem-2: #6b0010; color:#fff; }
+.cost-pip[data-stone="space"]   { --gem-1: #7cc1ff; --gem-2: #002b6b; color:#fff; }
+.cost-pip[data-stone="time"]    { --gem-1: #76ffb1; --gem-2: #006b2f; color:#fff; }
+.cost-pip[data-stone="mind"]    { --gem-1: #ffe27c; --gem-2: #6b4f00; color:#1a1100; }
+.cost-pip[data-stone="soul"]    { --gem-1: #d99cff; --gem-2: #4a0080; color:#fff; }
+.cost-pip.unmet { opacity: 0.45; filter: saturate(0.4) drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+
+/* Prestige stamp — embossed star on tier-graded badge */
+.card-prestige {
+  position: relative;
+  min-width: 22px; height: 22px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, var(--metal-hi, #ffe27c), var(--metal-1, #d99c2b) 45%, var(--metal-2, #8a6010));
+  color: var(--metal-lo, #2a1700);
+  -webkit-text-fill-color: var(--metal-lo, #2a1700);
+  background-clip: padding-box;
+  -webkit-background-clip: padding-box;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.45),
+    0 1px 3px rgba(0,0,0,0.6);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+.card-prestige.zero { visibility: hidden; }
+.card-prestige::before {
+  content: '★';
+  font-size: 10px;
+  margin-right: 2px;
+  color: var(--metal-lo, #2a1700);
+  -webkit-text-fill-color: var(--metal-lo, #2a1700);
+}
+
+/* Embossed nameplate behind the hero name */
+.card-name {
+  position: relative;
+  font-size: 8.5px;
+  margin: 2px -3px 4px;
+  padding: 3px 4px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.45));
+  border-top: 1px solid var(--metal-2, rgba(0,0,0,0.6));
+  border-bottom: 1px solid var(--metal-2, rgba(0,0,0,0.6));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.5);
+  letter-spacing: 0.6px;
+  color: var(--metal-hi, #ffd9aa);
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.7),
+    0 0 8px rgba(0,0,0,0.5);
+}
+.card-name::before,
+.card-name::after {
+  /* Tiny ornamental rivets at each end */
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--metal-1, #d29e6b);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.1);
+  transform: translateY(-50%);
+}
+.card-name::before { left: 3px; }
+.card-name::after  { right: 3px; }
+
+/* Tier-3: tiny gold corner ornaments */
+.card[data-tier="3"]::before {
+  content: '';
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  border-top: 1.5px solid var(--metal-1);
+  border-right: 1.5px solid var(--metal-1);
+  border-top-right-radius: 6px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Cost row — give it a tiny recessed shelf */
+.card-cost {
+  margin-top: auto;
+  padding: 3px 2px 1px;
+  border-top: 1px solid rgba(0,0,0,0.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(0,0,0,0.18), transparent);
+  border-radius: 0 0 6px 6px;
+}
+
+/* Mini cards inherit a slim version of the frame */
+.mini-card {
+  box-shadow:
+    inset 0 0 0 1px var(--mc-metal, rgba(180,140,80,0.4)),
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 2px 6px rgba(0,0,0,0.4);
+}
+.mini-card[data-bonus="power"] { --mc-metal: rgba(255,120,120,0.55); }
+.mini-card[data-bonus="space"] { --mc-metal: rgba(120,180,255,0.55); }
+.mini-card[data-bonus="time"]  { --mc-metal: rgba(120,255,180,0.55); }
+.mini-card[data-bonus="mind"]  { --mc-metal: rgba(255,220,120,0.55); }
+.mini-card[data-bonus="soul"]  { --mc-metal: rgba(220,160,255,0.55); }
+
+/* Cinematic card uses the heaviest, glow-pumped frame */
+.fly-card.cinematic-card {
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 2px var(--metal-1, #d29e6b),
+    inset 0 0 0 4px rgba(0,0,0,0.55),
+    inset 0 0 0 5px var(--metal-1, #d29e6b),
+    0 0 80px var(--frame-glow, rgba(255,212,0,0.6)),
+    0 32px 70px rgba(0,0,0,0.7),
+    inset 0 0 30px rgba(255,200,80,0.18);
+}
+
+/* =========================================================
    AAA polish: holographic foil, tier-3 prestige, 3D tilt,
    score popups, screen shake, comic-book banners, avatar ring
    ========================================================= */
