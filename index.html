@@ -131,9 +131,11 @@
             <span id="opp-reserved">0 reserved</span>
           </div>
         </div>
+        <button class="reserved-btn" id="btn-view-opp" title="View foe's collection">👁</button>
         <div class="player-turn-indicator" id="opp-turn"></div>
       </div>
       <div class="player-resources" id="opp-resources"></div>
+      <div class="heroes-strip" id="opp-heroes" aria-label="Foe's recruited heroes"></div>
     </section>
 
     <!-- Teams (Nobles) -->
@@ -185,9 +187,10 @@
             <span id="you-reserved">0 reserved</span>
           </div>
         </div>
-        <button class="reserved-btn" id="btn-reserved">📜 <span id="you-reserved-count">0</span></button>
+        <button class="reserved-btn" id="btn-reserved" title="Your reserved heroes (R)">📜 <span id="you-reserved-count">0</span></button>
       </div>
       <div class="player-resources" id="you-resources"></div>
+      <div class="heroes-strip" id="you-heroes" aria-label="Your recruited heroes"></div>
     </section>
 
     <!-- Reserved drawer -->
@@ -197,6 +200,37 @@
         <button class="icon-btn" id="btn-drawer-close">✕</button>
       </div>
       <div class="drawer-body" id="reserved-list"></div>
+    </div>
+
+    <!-- Opponent collection drawer -->
+    <div class="drawer" id="opp-drawer">
+      <div class="drawer-head">
+        <h3 id="opp-drawer-title">Foe's Collection</h3>
+        <button class="icon-btn" id="btn-opp-drawer-close">✕</button>
+      </div>
+      <div class="drawer-body collection-body">
+        <div class="collection-section">
+          <div class="collection-section-head">
+            <span>Recruited Heroes</span>
+            <span id="opp-coll-cards-count" class="collection-count">0</span>
+          </div>
+          <div class="collection-grid" id="opp-coll-heroes"></div>
+        </div>
+        <div class="collection-section">
+          <div class="collection-section-head">
+            <span>Reserved</span>
+            <span id="opp-coll-res-count" class="collection-count">0</span>
+          </div>
+          <div class="collection-grid" id="opp-coll-reserved"></div>
+        </div>
+        <div class="collection-section">
+          <div class="collection-section-head">
+            <span>Teams Joined</span>
+            <span id="opp-coll-teams-count" class="collection-count">0</span>
+          </div>
+          <div class="collection-teams" id="opp-coll-teams"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Toast -->

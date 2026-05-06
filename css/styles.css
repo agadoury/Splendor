@@ -864,6 +864,158 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* =========================================================
+   Heroes strip (recruited card collection inline)
+   ========================================================= */
+.heroes-strip {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 6px 0 2px;
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  min-height: 0;
+}
+.heroes-strip::-webkit-scrollbar { display: none; }
+.heroes-strip:empty::after {
+  content: 'No heroes yet';
+  color: var(--ink-dim);
+  font-size: 11px;
+  padding: 4px 0;
+  font-style: italic;
+}
+
+.mini-card {
+  flex-shrink: 0;
+  width: 32px; height: 46px;
+  border-radius: 6px;
+  background: linear-gradient(160deg, var(--mc-bg-1, #2a1268), var(--mc-bg-2, #110430));
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 18px;
+  position: relative;
+  transition: transform .2s ease, box-shadow .2s ease;
+  cursor: pointer;
+}
+.mini-card[data-bonus="power"] { --mc-bg-1: #4a0e0e; --mc-bg-2: #1a0303; border-color: rgba(255,59,59,.55); }
+.mini-card[data-bonus="space"] { --mc-bg-1: #0e2a4a; --mc-bg-2: #03101f; border-color: rgba(59,155,255,.55); }
+.mini-card[data-bonus="time"]  { --mc-bg-1: #0e3a24; --mc-bg-2: #03150d; border-color: rgba(47,217,122,.55); }
+.mini-card[data-bonus="mind"]  { --mc-bg-1: #4a3a0e; --mc-bg-2: #1c1303; border-color: rgba(255,205,59,.55); }
+.mini-card[data-bonus="soul"]  { --mc-bg-1: #34104a; --mc-bg-2: #11041c; border-color: rgba(179,91,255,.55); }
+
+.mini-card .mc-emoji {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+  line-height: 1;
+}
+.mini-card .mc-prestige {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--gold);
+  color: #2a1500;
+  border-radius: 50%;
+  width: 14px; height: 14px;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.mini-card.just-added {
+  animation: miniCardIn .55s cubic-bezier(.2,.9,.3,1.4);
+}
+@keyframes miniCardIn {
+  0%   { transform: scale(0.4) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(0); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Card-back style for hidden reserved cards (foe's deck-reserved) */
+.mini-card.face-down {
+  background:
+    linear-gradient(135deg, rgba(40,20,80,0.9), rgba(20,8,48,0.9)),
+    repeating-linear-gradient(45deg, transparent 0 6px, rgba(255,255,255,0.04) 6px 7px);
+  border-color: var(--border-bright);
+  color: var(--gold);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 900;
+  cursor: help;
+}
+
+/* =========================================================
+   Collection drawer (opponent inspection)
+   ========================================================= */
+.collection-body {
+  display: block;
+}
+.collection-section {
+  margin-bottom: 14px;
+}
+.collection-section:last-child { margin-bottom: 0; }
+.collection-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.collection-count {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 8px;
+  min-height: 50px;
+}
+.collection-grid:empty::after {
+  content: 'None';
+  color: var(--ink-dim);
+  font-size: 12px;
+  padding: 8px 0;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+.collection-grid .card {
+  aspect-ratio: 0.72 / 1;
+  font-size: 10px;
+  padding: 5px 4px 4px;
+}
+.collection-grid .card .card-art { font-size: 26px; }
+.collection-grid .card .card-name { font-size: 8px; }
+
+.collection-teams {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  min-height: 30px;
+}
+.collection-teams:empty::after {
+  content: 'None claimed yet';
+  color: var(--ink-dim);
+  font-size: 12px;
+  padding: 6px 0;
+  font-style: italic;
+}
+
+.collection-grid > .empty-msg {
+  grid-column: 1 / -1;
+  color: var(--ink-dim);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+  font-style: italic;
+}
+
+/* =========================================================
    Settings sheet
    ========================================================= */
 .settings-sheet {
@@ -1352,6 +1504,15 @@ button { font-family: inherit; cursor: pointer; }
 
   /* Settings sheet remains anchored to top-right */
   .settings-sheet { top: 64px; right: 18px; }
+
+  /* On desktop, hero strip wraps to multiple rows in the side panel */
+  .heroes-strip {
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 160px;
+    gap: 5px;
+  }
 
   /* Splash gets a bit more breathing room */
   .splash-inner { max-width: 560px; padding: 48px 24px; }

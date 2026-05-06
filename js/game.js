@@ -66,8 +66,20 @@
 
     $('#btn-cancel').addEventListener('click', () => { SFX.deselect(); SFX.haptics.tap(); cancelSelection(); });
     $('#btn-confirm').addEventListener('click', () => { SFX.haptics.confirm(); confirmSelection(); });
-    $('#btn-reserved').addEventListener('click', () => { SFX.tap(); SFX.haptics.tap(); $('#reserved-drawer').classList.toggle('open'); });
+    $('#btn-reserved').addEventListener('click', () => {
+      SFX.tap(); SFX.haptics.tap();
+      $('#opp-drawer').classList.remove('open');
+      $('#reserved-drawer').classList.toggle('open');
+    });
     $('#btn-drawer-close').addEventListener('click', () => { SFX.deselect(); $('#reserved-drawer').classList.remove('open'); });
+    $('#btn-view-opp').addEventListener('click', (e) => {
+      e.stopPropagation();
+      SFX.tap(); SFX.haptics.tap();
+      $('#reserved-drawer').classList.remove('open');
+      renderOpponentDrawer();
+      $('#opp-drawer').classList.toggle('open');
+    });
+    $('#btn-opp-drawer-close').addEventListener('click', () => { SFX.deselect(); $('#opp-drawer').classList.remove('open'); });
     $('#btn-menu').addEventListener('click', () => {
       if (confirm('Restart the saga?')) {
         $('#splash').classList.add('active');
@@ -146,10 +158,12 @@
         SFX.deselect();
         cancelSelection();
         $('#reserved-drawer').classList.remove('open');
+        $('#opp-drawer').classList.remove('open');
         $('#settings-sheet').classList.remove('open');
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         SFX.tap();
+        $('#opp-drawer').classList.remove('open');
         $('#reserved-drawer').classList.toggle('open');
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
@@ -433,7 +447,11 @@
       <div class="card-cost">${costPips}</div>
     `;
 
-    el.addEventListener('click', () => onCardClick(card, ctx));
+    if (ctx?.readonly) {
+      el.style.cursor = 'default';
+    } else {
+      el.addEventListener('click', () => onCardClick(card, ctx));
+    }
     return el;
   }
 
@@ -503,6 +521,47 @@
       `;
       cont.appendChild(div);
     }
+
+    // Heroes strip — recruited cards, grouped by bonus color, then by tier
+    const stripEl = $(`#${prefix}-heroes`);
+    if (stripEl) {
+      const prevHeroes = new Set(Array.from(stripEl.querySelectorAll('.mini-card')).map(el => el.dataset.hero));
+      stripEl.innerHTML = '';
+      const sorted = p.cards.slice().sort((a, b) => {
+        const colorOrder = STONES.indexOf(a.bonus) - STONES.indexOf(b.bonus);
+        return colorOrder !== 0 ? colorOrder : a.tier - b.tier;
+      });
+      for (const card of sorted) {
+        const el = renderMiniCard(card);
+        if (!prevHeroes.has(card.hero) && state.animsOn) el.classList.add('just-added');
+        stripEl.appendChild(el);
+      }
+    }
+  }
+
+  function renderMiniCard(card, opts = {}) {
+    const el = document.createElement('div');
+    el.className = 'mini-card';
+    el.dataset.bonus = card.bonus;
+    el.dataset.hero = card.hero;
+    el.title = `${card.hero} — ${STONE_META[card.bonus].name} bonus${card.prestige ? `, ★${card.prestige}` : ''}`;
+    el.innerHTML = `
+      <span class="mc-emoji">${card.emoji}</span>
+      ${card.prestige > 0 ? `<span class="mc-prestige">${card.prestige}</span>` : ''}
+    `;
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Show details by reusing the tooltip system, anchored to this card
+      if (typeof showCardTooltip === 'function') {
+        // For mobile, briefly show, then auto-hide
+        const fakeEl = document.createElement('div');
+        fakeEl.dataset.hero = card.hero;
+        fakeEl.getBoundingClientRect = () => el.getBoundingClientRect();
+        showCardTooltip(fakeEl);
+        setTimeout(hideTooltip, 2200);
+      }
+    });
+    return el;
   }
 
   function renderReservedDrawer() {
@@ -516,6 +575,58 @@
     me.reserved.forEach((card, i) => {
       list.appendChild(renderCard(card, { reserved: true, reservedIdx: i }));
     });
+  }
+
+  function renderOpponentDrawer() {
+    const opp = state.players[1];
+    $('#opp-drawer-title').textContent = `${opp.avatar} ${opp.name}'s Collection`;
+
+    // Heroes
+    const heroesEl = $('#opp-coll-heroes');
+    heroesEl.innerHTML = '';
+    $('#opp-coll-cards-count').textContent = opp.cards.length;
+    if (opp.cards.length === 0) {
+      heroesEl.innerHTML = '<div class="empty-msg">No heroes recruited.</div>';
+    } else {
+      const sorted = opp.cards.slice().sort((a, b) => {
+        const c = STONES.indexOf(a.bonus) - STONES.indexOf(b.bonus);
+        return c !== 0 ? c : b.tier - a.tier;
+      });
+      for (const card of sorted) {
+        heroesEl.appendChild(renderCard(card, { readonly: true }));
+      }
+    }
+
+    // Reserved (visible — casual game; in real Splendor only board-reserved are public)
+    const resEl = $('#opp-coll-reserved');
+    resEl.innerHTML = '';
+    $('#opp-coll-res-count').textContent = opp.reserved.length;
+    if (opp.reserved.length === 0) {
+      resEl.innerHTML = '<div class="empty-msg">Nothing reserved.</div>';
+    } else {
+      for (const card of opp.reserved) {
+        resEl.appendChild(renderCard(card, { readonly: true, reserved: true }));
+      }
+    }
+
+    // Teams claimed
+    const teamsEl = $('#opp-coll-teams');
+    teamsEl.innerHTML = '';
+    $('#opp-coll-teams-count').textContent = opp.teams.length;
+    for (const t of opp.teams) {
+      const el = document.createElement('div');
+      el.className = 'team';
+      const reqHtml = STONES.filter(s => t.req[s])
+        .map(s => `<span style="background:${STONE_META[s].color}">${t.req[s]}</span>`)
+        .join('');
+      el.innerHTML = `
+        <span class="team-prestige">${t.prestige}</span>
+        <div class="team-emoji">${t.emoji}</div>
+        <div class="team-name">${t.name}</div>
+        <div class="team-req">${reqHtml}</div>
+      `;
+      teamsEl.appendChild(el);
+    }
   }
 
   function setActiveTurnIndicator() {
