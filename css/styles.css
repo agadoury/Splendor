@@ -1359,16 +1359,6 @@ button { font-family: inherit; cursor: pointer; }
     transition: transform .12s ease-out, box-shadow .25s ease !important;
     z-index: 6;
   }
-  .card.tilting:not(.card-empty)::before {
-    content: '';
-    position: absolute; inset: 0;
-    border-radius: inherit;
-    background: radial-gradient(circle 100px at var(--mx, 50%) var(--my, 50%),
-      rgba(255,255,255,0.10) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 1;
-    mix-blend-mode: screen;
-  }
 }
 
 /* Floating score popup */
