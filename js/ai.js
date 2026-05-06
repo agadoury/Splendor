@@ -1,4 +1,4 @@
-// Simple but reasonable AI opponent for Marvel Splendor.
+// Simple but reasonable AI opponent for The Rift.
 // Difficulty levels affect lookahead and risk-taking.
 
 const AI = (() => {

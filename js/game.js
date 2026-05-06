@@ -1,4 +1,4 @@
-// Marvel Splendor — main game logic + UI rendering
+// The Rift — main game logic + UI rendering (LoL-themed reskin)
 
 (() => {
   'use strict';
@@ -14,8 +14,8 @@
     board: { 1: [], 2: [], 3: [] }, // 4 face-up per tier
     teams: [],
     players: [
-      makePlayer('You', '🦸'),
-      makePlayer('Loki', '🦹')
+      makePlayer('You', '🧙'),
+      makePlayer('Annie', '🧸')
     ],
     selection: { stones: [], buyTier: null, buySlot: null, buyReservedIdx: null, reserveTier: null, reserveSlot: null },
     busy: false,
@@ -57,8 +57,8 @@
         $$('.diff-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.difficulty = btn.dataset.diff;
-        const names = { easy: 'Loki', medium: 'Ultron', hard: 'Thanos' };
-        const avatars = { easy: '🦹', medium: '🤖', hard: '👑' };
+        const names = { easy: 'Annie', medium: 'Veigar', hard: 'Aatrox' };
+        const avatars = { easy: '🧸', medium: '🎩', hard: '🗡️' };
         state.players[1].name = names[state.difficulty];
         state.players[1].avatar = avatars[state.difficulty];
       });
@@ -81,7 +81,7 @@
     });
     $('#btn-opp-drawer-close').addEventListener('click', () => { SFX.deselect(); $('#opp-drawer').classList.remove('open'); });
     $('#btn-menu').addEventListener('click', () => {
-      if (confirm('Restart the saga?')) {
+      if (confirm('Restart the match?')) {
         SFX.stopAmbient();
         $('#splash').classList.add('active');
         $('#game').classList.remove('active');
@@ -351,7 +351,7 @@
       </div>
       <div class="tt-row"><span>Joins for</span><b>★ ${team.prestige}</b></div>
       <div class="tt-row" style="display:block; margin-top:4px; color:var(--ink-dim); font-size:11px;">
-        Required hero bonuses:
+        Required champion bonuses:
       </div>
       <div class="tt-cost">${reqHtml}</div>
     `;
@@ -421,7 +421,7 @@
       updateSelectionInfo();
       setActiveTurnIndicator();
       SFX.startAmbient();
-      impactBanner('ASSEMBLE', 'THE SAGA BEGINS');
+      impactBanner('TO THE RIFT', 'THE MATCH BEGINS');
       setTimeout(() => gameEl.classList.remove('entering'), 900);
     }, 480);
   }
@@ -647,7 +647,7 @@
     list.innerHTML = '';
     const me = state.players[0];
     if (me.reserved.length === 0) {
-      list.innerHTML = '<div class="drawer-empty">No reserved heroes yet. Reserve a card to gain a Reality (wild) stone.</div>';
+      list.innerHTML = '<div class="drawer-empty">No champions marked yet. Mark a champion to gain a Hexgold (wild) essence.</div>';
       return;
     }
     me.reserved.forEach((card, i) => {
@@ -664,7 +664,7 @@
     heroesEl.innerHTML = '';
     $('#opp-coll-cards-count').textContent = opp.cards.length;
     if (opp.cards.length === 0) {
-      heroesEl.innerHTML = '<div class="empty-msg">No heroes recruited.</div>';
+      heroesEl.innerHTML = '<div class="empty-msg">No champions summoned.</div>';
     } else {
       const sorted = opp.cards.slice().sort((a, b) => {
         const c = STONES.indexOf(a.bonus) - STONES.indexOf(b.bonus);
@@ -680,7 +680,7 @@
     resEl.innerHTML = '';
     $('#opp-coll-res-count').textContent = opp.reserved.length;
     if (opp.reserved.length === 0) {
-      resEl.innerHTML = '<div class="empty-msg">Nothing reserved.</div>';
+      resEl.innerHTML = '<div class="empty-msg">Nothing marked.</div>';
     } else {
       for (const card of opp.reserved) {
         resEl.appendChild(renderCard(card, { readonly: true, reserved: true }));
@@ -777,12 +777,12 @@
     const sel = state.selection.stones;
     if (stone === 'reality') {
       SFX.error(); SFX.haptics.error();
-      showToast("Reality (wild) stones can only be gained by reserving a hero card.", 'error');
+      showToast("Hexgold (wild) essence is only gained by marking a champion.", 'error');
       return;
     }
     if ((state.supply[stone] || 0) === 0) {
       SFX.error(); SFX.haptics.error();
-      showToast('No more of those stones in the supply.', 'error');
+      showToast('No more of that essence in the pool.', 'error');
       return;
     }
 
@@ -794,12 +794,12 @@
     if (counts[stone]) {
       if (sel.length !== 1) {
         SFX.error(); SFX.haptics.error();
-        showToast('You can take 3 different OR 2 of the same.', 'error');
+        showToast('Channel 3 different essences OR 2 of the same.', 'error');
         return;
       }
       if (state.supply[stone] < 4) {
         SFX.error(); SFX.haptics.error();
-        showToast('Need 4+ stones in supply to take 2 of the same.', 'error');
+        showToast('Need 4+ in the pool to channel 2 of the same.', 'error');
         return;
       }
       sel.push(stone);
@@ -807,7 +807,7 @@
       // Different stone
       if (sel.length >= 3) {
         SFX.error(); SFX.haptics.error();
-        showToast('Maximum of 3 different stones.', 'error');
+        showToast('Maximum of 3 different essences.', 'error');
         return;
       }
       // If we already have a pair, cannot add more
@@ -825,7 +825,7 @@
     if (totalAfter > MAX_HAND) {
       sel.pop();
       SFX.error(); SFX.haptics.error();
-      showToast(`Cannot exceed ${MAX_HAND} stones in hand.`, 'error');
+      showToast(`Cannot exceed ${MAX_HAND} essences.`, 'error');
       return;
     }
 
@@ -849,7 +849,7 @@
     if (ctx?.reserved) {
       if (!canAfford(me, card)) {
         SFX.error(); SFX.haptics.error();
-        showToast('Not enough stones to recruit this hero.', 'error');
+        showToast('Not enough essence to summon this champion.', 'error');
         return;
       }
       state.selection.buyReservedIdx = ctx.reservedIdx;
@@ -871,7 +871,7 @@
     } else {
       if (me.reserved.length >= MAX_RESERVE) {
         SFX.error(); SFX.haptics.error();
-        showToast('Reserve full (3 cards max).', 'error');
+        showToast('Already marked 3 champions (max).', 'error');
         return;
       }
       state.selection.reserveTier = ctx.tier;
@@ -954,7 +954,7 @@
     const sel = state.selection;
 
     if (state.turn !== 0) {
-      info.textContent = `${state.players[1].name} is plotting...`;
+      info.textContent = `${state.players[1].name} is planning their move...`;
       btn.disabled = true; cancel.disabled = true;
       return;
     }
@@ -966,51 +966,51 @@
       const labels = sel.stones.map(s => STONE_META[s].name).join(', ');
       info.textContent = valid.ok ? `Gather: ${labels}` : valid.msg;
       btn.disabled = !valid.ok;
-      btn.textContent = 'Take Stones';
+      btn.textContent = 'Channel';
       cancel.disabled = false;
     } else if (sel.buyTier !== null || sel.buyReservedIdx !== null) {
       const card = sel.buyReservedIdx !== null
         ? state.players[0].reserved[sel.buyReservedIdx]
         : state.board[sel.buyTier][sel.buySlot];
-      info.textContent = `Recruit ${card.hero} (${card.prestige}★)`;
+      info.textContent = `Summon ${card.hero} (${card.prestige}★)`;
       btn.disabled = false;
-      btn.textContent = 'Recruit';
+      btn.textContent = 'Summon';
       cancel.disabled = false;
     } else if (sel.reserveTier !== null) {
       const card = sel.reserveSlot === -1 ? null : state.board[sel.reserveTier][sel.reserveSlot];
       info.textContent = card
-        ? `Reserve ${card.hero} (gain Reality stone)`
-        : `Reserve unknown Tier ${sel.reserveTier} card (gain Reality stone)`;
+        ? `Mark ${card.hero} (gain Hexgold essence)`
+        : `Mark unknown Tier ${sel.reserveTier} champion (gain Hexgold essence)`;
       btn.disabled = false;
-      btn.textContent = 'Reserve';
+      btn.textContent = 'Mark';
       cancel.disabled = false;
     } else {
-      info.textContent = 'Tap stones to gather, or tap a hero to recruit / reserve';
+      info.textContent = 'Tap essences to channel, or tap a champion to summon / mark';
       btn.disabled = true;
       cancel.disabled = true;
     }
   }
 
   function isValidGather(stones) {
-    if (stones.length === 0) return { ok: false, msg: 'Pick stones to gather.' };
+    if (stones.length === 0) return { ok: false, msg: 'Pick essences to channel.' };
     const counts = {};
     for (const s of stones) counts[s] = (counts[s] || 0) + 1;
     const distinct = Object.keys(counts).length;
     const hasPair = Object.values(counts).some(v => v >= 2);
 
     if (hasPair) {
-      if (stones.length !== 2) return { ok: false, msg: 'Pair: take exactly 2 of the same.' };
+      if (stones.length !== 2) return { ok: false, msg: 'Pair: channel exactly 2 of the same.' };
       const stone = Object.keys(counts).find(k => counts[k] === 2);
-      if (state.supply[stone] < 4) return { ok: false, msg: 'Pair requires 4+ in supply.' };
+      if (state.supply[stone] < 4) return { ok: false, msg: 'Pair requires 4+ in the pool.' };
       return { ok: true };
     }
     if (distinct !== stones.length) return { ok: false, msg: 'Mixed picks not allowed.' };
-    if (stones.length > 3) return { ok: false, msg: 'Max 3 stones.' };
+    if (stones.length > 3) return { ok: false, msg: 'Max 3 essences.' };
     if (stones.length < 3) {
       // Allow taking fewer than 3 only if not enough distinct stones in supply
       const available = STONES.filter(s => (state.supply[s] || 0) > 0).length;
       if (stones.length < Math.min(3, available)) {
-        return { ok: false, msg: `Pick ${Math.min(3, available)} different stones.` };
+        return { ok: false, msg: `Pick ${Math.min(3, available)} different essences.` };
       }
     }
     return { ok: true };
@@ -1077,7 +1077,7 @@
     await animateGather(playerIdx, stones);
     renderSupply();
     renderPlayer(playerIdx);
-    showToast(`${player.name} gathered ${stones.map(s => STONE_META[s].symbol).join(' ')}`);
+    showToast(`${player.name} channeled ${stones.map(s => STONE_META[s].symbol).join(' ')}`);
   }
 
   async function actionBuyBoardCard(playerIdx, tier, slot) {
@@ -1107,7 +1107,7 @@
     if (card.prestige > 0) {
       scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
     }
-    showToast(`${player.name} recruited ${card.hero}!`, 'success');
+    showToast(`${player.name} summoned ${card.hero}!`, 'success');
   }
 
   async function actionBuyReservedCard(playerIdx, idx) {
@@ -1132,7 +1132,7 @@
     if (card.prestige > 0) {
       scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
     }
-    showToast(`${player.name} recruited ${card.hero}!`, 'success');
+    showToast(`${player.name} summoned ${card.hero}!`, 'success');
   }
 
   async function actionReserveCard(playerIdx, tier, slot) {
@@ -1160,7 +1160,7 @@
     renderBoard(slot >= 0 ? { flipSlots: [{ tier, slot }] } : {});
     renderPlayer(playerIdx);
     renderReservedDrawer();
-    showToast(`${player.name} reserved a ${slot === -1 ? 'Tier ' + tier : ''} hero`, 'success');
+    showToast(`${player.name} marked a ${slot === -1 ? 'Tier ' + tier : ''} champion`, 'success');
   }
 
   async function claimEligibleTeams(playerIdx) {
@@ -1181,7 +1181,7 @@
       SFX.teamClaim();
       if (playerIdx === 0) SFX.haptics.victory();
       shake(2);
-      impactBanner('TEAM UP', claimed.team.name.toUpperCase());
+      impactBanner('FACTION ALLIED', claimed.team.name.toUpperCase());
       await animateTeamClaim(playerIdx, claimed.team);
       renderTeams();
       renderPlayer(playerIdx);
@@ -1189,7 +1189,7 @@
         atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige',
         team: true
       });
-      showToast(`${claimed.team.name} joins ${player.name}! +${claimed.team.prestige}★`, 'success');
+      showToast(`${claimed.team.name} allies with ${player.name}! +${claimed.team.prestige}★`, 'success');
     }
   }
 
@@ -1286,9 +1286,9 @@
       title.style.background = 'linear-gradient(180deg, #ffe27c 0%, #d99c2b 100%)';
       title.style.webkitBackgroundClip = 'text';
       title.style.backgroundClip = 'text';
-      sub.textContent = `You triumphed over ${p1.name}.`;
+      sub.textContent = `You conquered ${p1.name} on the Rift.`;
       shake(3);
-      impactBanner('VICTORY', 'EARTH IS SAFE');
+      impactBanner('VICTORY', 'THE RIFT IS YOURS');
       launchConfetti();
       SFX.victory();
       SFX.haptics.victory();
@@ -1297,14 +1297,14 @@
       title.style.background = 'linear-gradient(180deg, #ff6464 0%, #800 100%)';
       title.style.webkitBackgroundClip = 'text';
       title.style.backgroundClip = 'text';
-      sub.textContent = `${p1.name} achieved cosmic dominance.`;
+      sub.textContent = `${p1.name} dominated the Rift.`;
       shake(3);
-      impactBanner('DEFEAT', `${p1.name.toUpperCase()} REIGNS`);
+      impactBanner('DEFEAT', `${p1.name.toUpperCase()} CONQUERS`);
       SFX.defeat();
       SFX.haptics.error();
     } else {
-      title.textContent = 'STALEMATE';
-      sub.textContent = 'A balance of cosmic power.';
+      title.textContent = 'REMAKE';
+      sub.textContent = 'A balanced match — the Rift remains contested.';
       SFX.turnChime();
     }
 
@@ -1447,8 +1447,8 @@
     const banner = document.createElement('div');
     banner.className = 'recruit-banner';
     const headline = playerIdx === 0
-      ? (card.tier === 3 ? 'I HAVE RECRUITED A LEGEND' : 'I HAVE RECRUITED THIS HERO')
-      : `${state.players[1].name.toUpperCase()} HAS RECRUITED`;
+      ? (card.tier === 3 ? 'A LEGENDARY CHAMPION ANSWERS THE CALL' : 'A NEW CHAMPION JOINS THE RIFT')
+      : `${state.players[1].name.toUpperCase()} SUMMONS`;
     banner.innerHTML = `<small>${headline}</small><span>${card.hero}</span>`;
     document.body.appendChild(banner);
 

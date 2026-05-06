@@ -1,4 +1,4 @@
-// Marvel Splendor — sound effects & haptics
+// The Rift — sound effects & haptics
 // All sounds are synthesized with Web Audio API so we ship zero binary assets.
 
 const SFX = (() => {
