@@ -2055,12 +2055,19 @@ button { font-family: inherit; cursor: pointer; }
   /* Players: tighter padding, more compact resources */
   .player-panel { padding: 8px 10px; border-radius: 10px; }
   .player-head { gap: 8px; margin-bottom: 6px; }
-  .player-resources { grid-template-columns: repeat(3, 1fr); gap: 5px; }
-  .player-resources .resource { aspect-ratio: 2 / 1; border-radius: 8px; }
-  .player-resources .resource .res-symbol { font-size: 14px; }
-  .player-resources .resource .res-counts { font-size: 11px; margin-top: 0; }
+  .player-resources { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .player-resources .resource {
+    aspect-ratio: auto;
+    height: 26px;
+    border-radius: 6px;
+    flex-direction: row;
+    gap: 3px;
+    padding: 0 6px;
+  }
+  .player-resources .resource .res-symbol { font-size: 12px; line-height: 1; }
+  .player-resources .resource .res-counts { font-size: 10px; margin-top: 0; gap: 2px; }
   .player-resources .resource .res-bonus { font-size: 9px; }
-  .player-avatar { width: 38px; height: 38px; font-size: 20px; border-width: 1.5px; }
+  .player-avatar { width: 36px; height: 36px; font-size: 18px; border-width: 1.5px; }
   .player-name { font-size: 13px; letter-spacing: 1.5px; }
   .player-stats { font-size: 11px; gap: 4px; }
   .player-stats .prestige { font-size: 13px; }
@@ -2089,9 +2096,9 @@ button { font-family: inherit; cursor: pointer; }
   .tier-label { font-size: 14px; }
   .deck { font-size: 11px; border-radius: 8px; }
   .deck .deck-count { font-size: 16px; }
-  .card { font-size: 11px; padding: 5px 4px 4px; border-radius: 8px; }
+  .card { aspect-ratio: 0.82 / 1; font-size: 11px; padding: 5px 4px 4px; border-radius: 8px; }
   .card-name { font-size: 9px; margin: 1px -3px 3px; padding: 2px 3px; }
-  .card-art { font-size: 30px; margin: 1px 0; }
+  .card-art { font-size: 28px; margin: 0; }
   .card-bonus { width: 20px; height: 20px; font-size: 9px; }
   .card-prestige { font-size: 12px; min-width: 20px; height: 20px; padding: 0 4px; }
   .card-prestige::before { font-size: 8px; margin-right: 1px; }
@@ -2142,27 +2149,27 @@ button { font-family: inherit; cursor: pointer; }
   .splash-inner { max-width: 560px; padding: 48px 24px; }
 }
 
-/* Larger laptops / desktops with more vertical room */
+/* Mid laptops with more vertical room */
 @media (min-width: 1280px) and (min-height: 820px) {
   .game.active {
-    grid-template-columns: 280px minmax(0, 1fr) 200px;
+    grid-template-columns: 270px minmax(0, 1fr) 190px;
     column-gap: 12px;
     padding: 10px 14px 12px;
   }
   .player-panel { padding: 10px 12px; }
-  .player-avatar { width: 44px; height: 44px; font-size: 24px; }
+  .player-avatar { width: 42px; height: 42px; font-size: 22px; }
   .player-name { font-size: 14px; }
   .player-resources .resource .res-symbol { font-size: 16px; }
   .player-resources .resource .res-counts { font-size: 12px; }
-  .heroes-strip { max-height: 130px; }
+  .heroes-strip { max-height: 110px; }
 
-  .supply-token .tk-symbol { font-size: 26px; }
-  .supply-token .tk-count { width: 32px; height: 32px; font-size: 13px; }
+  .supply-token .tk-symbol { font-size: 24px; }
+  .supply-token .tk-count { width: 30px; height: 30px; font-size: 12px; }
 
-  .tier-cards { grid-template-columns: repeat(4, minmax(0, 160px)); }
-  .card { font-size: 12px; padding: 6px 5px 5px; }
+  .tier-cards { grid-template-columns: repeat(4, minmax(0, 150px)); }
+  .card { aspect-ratio: 0.82 / 1; font-size: 12px; padding: 6px 5px 5px; }
   .card-name { font-size: 10px; }
-  .card-art { font-size: 36px; }
+  .card-art { font-size: 32px; }
   .card-bonus { width: 22px; height: 22px; font-size: 10px; }
   .card-prestige { font-size: 14px; min-width: 22px; height: 22px; }
   .cost-pip { width: 18px; height: 18px; font-size: 10px; }
@@ -2175,10 +2182,18 @@ button { font-family: inherit; cursor: pointer; }
   .btn.small { padding: 10px 18px; font-size: 12px; }
 }
 
+/* Full HD and larger */
+@media (min-width: 1440px) and (min-height: 900px) {
+  .game.active { grid-template-columns: 280px minmax(0, 1fr) 200px; }
+  .tier-cards { grid-template-columns: repeat(4, minmax(0, 170px)); }
+  .card-art { font-size: 36px; }
+}
+
 /* Very large displays */
 @media (min-width: 1600px) and (min-height: 1000px) {
   .game.active { grid-template-columns: 300px minmax(0, 1fr) 220px; }
-  .tier-cards { grid-template-columns: repeat(4, minmax(0, 190px)); }
+  .tier-cards { grid-template-columns: repeat(4, minmax(0, 200px)); }
+  .card { aspect-ratio: 0.85 / 1; }
   .card-art { font-size: 42px; }
   .card-name { font-size: 11px; }
 }
