@@ -2010,74 +2010,98 @@ button { font-family: inherit; cursor: pointer; }
     height: 100vh;
     height: 100dvh;
     margin: 0 auto;
-    padding: 10px 14px 14px;
+    padding: 8px 12px 10px;
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr) 220px;
+    grid-template-columns: 250px minmax(0, 1fr) 180px;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas:
       "topbar  topbar topbar"
       "opp     teams  supply"
       "you     board  supply"
       "actions actions actions";
-    column-gap: 14px;
-    row-gap: 10px;
+    column-gap: 10px;
+    row-gap: 8px;
     box-sizing: border-box;
   }
 
-  .topbar { grid-area: topbar; position: relative; top: auto; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 0; }
+  .topbar { grid-area: topbar; position: relative; top: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 0; padding: 6px 10px; }
   .player-panel.opponent { grid-area: opp; margin: 0; }
   .player-panel.you { grid-area: you; margin: 0; align-self: end; }
   .teams-row { grid-area: teams; margin: 0; padding: 0; }
-  .board { grid-area: board; padding: 0; min-height: 0; }
-  .supply { grid-area: supply; padding: 0; grid-template-columns: 1fr; grid-auto-rows: minmax(72px, auto); align-content: start; gap: 10px; max-height: 100%; overflow: hidden; }
-  .action-bar { grid-area: actions; margin: 0; border-radius: 12px; position: relative; bottom: auto; }
+  .board { grid-area: board; padding: 0; min-height: 0; overflow-y: auto; }
+  .supply { grid-area: supply; padding: 0; grid-template-columns: 1fr; grid-auto-rows: minmax(0, 1fr); align-content: stretch; gap: 6px; max-height: 100%; overflow: hidden; }
+  .action-bar { grid-area: actions; margin: 0; border-radius: 10px; position: relative; bottom: auto; }
 
-  /* Supply tokens become bigger circles in a vertical stack */
-  .supply-token { aspect-ratio: 2.4 / 1; border-radius: 16px; padding: 0 14px; flex-direction: row; justify-content: space-between; }
-  .supply-token .tk-symbol { font-size: 30px; }
+  /* Supply tokens fill the column vertically */
+  .supply-token {
+    aspect-ratio: auto;
+    min-height: 0;
+    border-radius: 12px;
+    padding: 0 12px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .supply-token .tk-symbol { font-size: 22px; }
   .supply-token .tk-count {
     position: static;
-    width: 36px; height: 36px;
+    width: 28px; height: 28px;
     background: rgba(0,0,0,0.5);
-    font-size: 14px;
+    font-size: 12px;
     border: 1px solid var(--border-bright);
   }
-  .supply-token .selection-bubble { top: -8px; left: -8px; }
-  .supply-token .kbd-hint { bottom: auto; top: 6px; left: 6px; }
+  .supply-token .selection-bubble { top: -6px; left: -6px; }
+  .supply-token .kbd-hint { bottom: auto; top: 4px; left: 4px; }
 
-  /* Players are wider with bigger resources */
-  .player-panel { padding: 12px 14px; border-radius: 14px; }
-  .player-resources { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .player-resources .resource { aspect-ratio: 1.8 / 1; border-radius: 10px; }
-  .player-resources .resource .res-symbol { font-size: 18px; }
-  .player-resources .resource .res-counts { font-size: 13px; }
-  .player-avatar { width: 52px; height: 52px; font-size: 28px; }
-  .player-name { font-size: 16px; }
-  .player-stats { font-size: 13px; }
-  .player-stats .prestige { font-size: 17px; }
+  /* Players: tighter padding, more compact resources */
+  .player-panel { padding: 8px 10px; border-radius: 10px; }
+  .player-head { gap: 8px; margin-bottom: 6px; }
+  .player-resources { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .player-resources .resource { aspect-ratio: 2 / 1; border-radius: 8px; }
+  .player-resources .resource .res-symbol { font-size: 14px; }
+  .player-resources .resource .res-counts { font-size: 11px; margin-top: 0; }
+  .player-resources .resource .res-bonus { font-size: 9px; }
+  .player-avatar { width: 38px; height: 38px; font-size: 20px; border-width: 1.5px; }
+  .player-name { font-size: 13px; letter-spacing: 1.5px; }
+  .player-stats { font-size: 11px; gap: 4px; }
+  .player-stats .prestige { font-size: 13px; }
+  .reserved-btn { padding: 4px 8px; font-size: 11px; }
 
-  /* Bigger cards on desktop */
-  .tier { grid-template-columns: 38px 78px 1fr; gap: 10px; }
-  .tier-cards { gap: 10px; }
-  .tier-label { font-size: 18px; }
-  .deck { font-size: 14px; }
-  .deck .deck-count { font-size: 22px; }
-  .card { font-size: 13px; padding: 8px 7px 7px; }
-  .card-name { font-size: 11px; }
-  .card-art { font-size: 44px; margin: 4px 0; }
-  .card-bonus { width: 28px; height: 28px; font-size: 16px; }
-  .card-prestige { font-size: 20px; }
-  .cost-pip { width: 20px; height: 20px; font-size: 11px; }
+  .heroes-strip {
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 96px;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 4px 0 0;
+  }
+  .mini-card { width: 28px; height: 40px; font-size: 16px; }
 
-  .teams-row { gap: 10px; }
-  .team { width: 92px; padding: 10px 8px; }
-  .team-emoji { font-size: 26px; }
-  .team-name { font-size: 10px; }
-  .team-prestige { width: 24px; height: 24px; font-size: 13px; }
+  /* Compact cards */
+  .tier { grid-template-columns: 26px 56px 1fr; gap: 6px; }
+  .tier-cards { gap: 6px; }
+  .tier-label { font-size: 14px; }
+  .deck { font-size: 11px; border-radius: 8px; }
+  .deck .deck-count { font-size: 16px; }
+  .card { font-size: 11px; padding: 5px 4px 4px; border-radius: 8px; }
+  .card-name { font-size: 9px; margin: 1px -3px 3px; padding: 2px 3px; }
+  .card-art { font-size: 30px; margin: 1px 0; }
+  .card-bonus { width: 20px; height: 20px; font-size: 9px; }
+  .card-prestige { font-size: 12px; min-width: 20px; height: 20px; padding: 0 4px; }
+  .card-prestige::before { font-size: 8px; margin-right: 1px; }
+  .cost-pip { width: 16px; height: 16px; font-size: 9px; }
 
-  .action-bar { padding: 10px 16px; }
-  .selection-info { font-size: 14px; }
-  .btn.small { padding: 12px 20px; font-size: 13px; }
+  .teams-row { gap: 6px; }
+  .team { width: 70px; padding: 6px 5px; border-radius: 8px; }
+  .team-emoji { font-size: 18px; }
+  .team-name { font-size: 8px; margin-top: 2px; }
+  .team-prestige { width: 18px; height: 18px; font-size: 10px; top: -4px; right: -4px; }
+  .team-req { gap: 2px; margin-top: 3px; }
+  .team-req span { width: 12px; height: 12px; font-size: 8px; }
+
+  .action-bar { padding: 6px 12px; }
+  .selection-info { font-size: 12px; }
+  .btn.small { padding: 8px 16px; font-size: 11px; }
 
   /* Reserved drawer becomes a centered modal-ish floater */
   .drawer {
@@ -2112,10 +2136,42 @@ button { font-family: inherit; cursor: pointer; }
   .splash-inner { max-width: 560px; padding: 48px 24px; }
 }
 
-/* Very large screens: make supply tokens slightly larger */
-@media (min-width: 1280px) {
-  .game.active { grid-template-columns: 300px minmax(0, 1fr) 240px; }
-  .card-art { font-size: 48px; }
-  .card-name { font-size: 12px; }
+/* Larger laptops / desktops with more vertical room */
+@media (min-width: 1280px) and (min-height: 820px) {
+  .game.active {
+    grid-template-columns: 280px minmax(0, 1fr) 200px;
+    column-gap: 12px;
+    padding: 10px 14px 12px;
+  }
+  .player-panel { padding: 10px 12px; }
+  .player-avatar { width: 44px; height: 44px; font-size: 24px; }
+  .player-name { font-size: 14px; }
+  .player-resources .resource .res-symbol { font-size: 16px; }
+  .player-resources .resource .res-counts { font-size: 12px; }
+  .heroes-strip { max-height: 130px; }
+
+  .supply-token .tk-symbol { font-size: 26px; }
+  .supply-token .tk-count { width: 32px; height: 32px; font-size: 13px; }
+
+  .card { font-size: 12px; padding: 6px 5px 5px; }
+  .card-name { font-size: 10px; }
+  .card-art { font-size: 36px; }
+  .card-bonus { width: 22px; height: 22px; font-size: 10px; }
+  .card-prestige { font-size: 14px; min-width: 22px; height: 22px; }
+  .cost-pip { width: 18px; height: 18px; font-size: 10px; }
+
+  .team { width: 80px; padding: 8px 6px; }
+  .team-emoji { font-size: 22px; }
+  .team-name { font-size: 9px; }
+
+  .selection-info { font-size: 13px; }
+  .btn.small { padding: 10px 18px; font-size: 12px; }
+}
+
+/* Very large displays */
+@media (min-width: 1600px) and (min-height: 1000px) {
+  .game.active { grid-template-columns: 300px minmax(0, 1fr) 220px; }
+  .card-art { font-size: 42px; }
+  .card-name { font-size: 11px; }
 }
 .board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
