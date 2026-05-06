@@ -490,21 +490,8 @@
     }
   }
 
-  function renderCard(card, ctx) {
-    const el = document.createElement('div');
-    el.className = 'card';
-    el.dataset.bonus = card.bonus;
-    el.dataset.hero = card.hero;
-    if (ctx) {
-      el.dataset.tier = ctx.tier;
-      el.dataset.slot = ctx.slot;
-    }
-    if (ctx?.reserved) el.dataset.reserved = '1';
-
-    const meta = STONE_META[card.bonus];
-    const me = state.players[0];
-
-    const costPips = STONES.map(stone => {
+  function costPipsHtml(card, me) {
+    return STONES.map(stone => {
       const cost = card.cost[stone];
       if (!cost) return '';
       const bonus = me.bonuses[stone] || 0;
@@ -524,6 +511,23 @@
       const tip = `${STONE_META[stone].name}: cost ${cost} − ${bonus} bonus = ${stillNeed} from hand (you have ${have})`;
       return `<span class="cost-pip ${stateClass}" data-stone="${stone}" title="${tip}">${display}</span>`;
     }).join('');
+  }
+
+  function renderCard(card, ctx) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.bonus = card.bonus;
+    el.dataset.hero = card.hero;
+    if (ctx) {
+      el.dataset.tier = ctx.tier;
+      el.dataset.slot = ctx.slot;
+    }
+    if (ctx?.reserved) el.dataset.reserved = '1';
+
+    const meta = STONE_META[card.bonus];
+    const me = state.players[0];
+
+    const costPips = costPipsHtml(card, me);
 
     el.innerHTML = `
       ${ctx?.reserved ? '<span class="reserved-badge">RESERVED</span>' : ''}
@@ -725,21 +729,28 @@
   }
 
   function refreshAffordability() {
-    if (state.turn !== 0) {
-      $$('.card.affordable').forEach(c => c.classList.remove('affordable'));
-      return;
-    }
     const me = state.players[0];
+    const yourTurn = state.turn === 0;
+    const updatePips = (cardEl, card) => {
+      const cont = cardEl.querySelector('.card-cost');
+      if (cont) cont.innerHTML = costPipsHtml(card, me);
+    };
     $$('#board .card[data-tier]').forEach(el => {
       const tier = +el.dataset.tier; const slot = +el.dataset.slot;
       const card = state.board[tier]?.[slot];
       if (!card) { el.classList.remove('affordable'); return; }
-      el.classList.toggle('affordable', canAfford(me, card));
+      el.classList.toggle('affordable', yourTurn && canAfford(me, card));
+      updatePips(el, card);
     });
     $$('#reserved-list .card').forEach((el, idx) => {
       const card = me.reserved[idx];
       if (!card) return;
-      el.classList.toggle('affordable', canAfford(me, card));
+      el.classList.toggle('affordable', yourTurn && canAfford(me, card));
+      updatePips(el, card);
+    });
+    // Refresh hero strip pips too (so the recruited heroes panel mirrors state)
+    $$('.heroes-strip .mini-card').forEach(el => {
+      // mini cards have no pips; nothing to refresh, but keep the function uniform
     });
   }
 
