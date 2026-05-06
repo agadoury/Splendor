@@ -2013,11 +2013,10 @@ button { font-family: inherit; cursor: pointer; }
     padding: 8px 12px 10px;
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr) 180px;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "topbar  topbar topbar"
-      "teams   teams  teams"
-      "opp     board  supply"
+      "topbar  topbar  topbar"
+      "opp     board   supply"
       "actions actions actions";
     column-gap: 10px;
     row-gap: 8px;
@@ -2025,18 +2024,75 @@ button { font-family: inherit; cursor: pointer; }
   }
 
   .topbar { grid-area: topbar; position: relative; top: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 0; padding: 6px 10px; }
-  .player-panel.opponent { grid-area: opp; margin: 0; align-self: start; }
-  /* "you" panel shares the left column with opp; pinned to the bottom of row 3 */
+
+  /* Opp + factions + you all share the left column, stacked top / center / bottom */
+  .player-panel.opponent {
+    grid-column: 1; grid-row: 2;
+    margin: 0;
+    align-self: start;
+    width: 100%;
+  }
   .player-panel.you {
-    grid-column: 1;
-    grid-row: 3;
+    grid-column: 1; grid-row: 2;
     margin: 0;
     align-self: end;
+    width: 100%;
   }
-  .teams-row { grid-area: teams; margin: 0; padding: 0; justify-content: center; align-items: center; }
+  .teams-row {
+    grid-column: 1; grid-row: 2;
+    align-self: center;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 6px;
+    overflow: visible;
+  }
   .board { grid-area: board; padding: 0; min-height: 0; overflow-y: auto; align-self: stretch; }
   .supply { grid-area: supply; padding: 0; grid-template-columns: 1fr; grid-auto-rows: minmax(0, 1fr); align-content: stretch; gap: 6px; max-height: 100%; overflow: hidden; }
   .action-bar { grid-area: actions; margin: 0; border-radius: 10px; position: relative; bottom: auto; }
+
+  /* Faction chips re-laid as horizontal banners in the side column */
+  .teams-row .team {
+    width: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    row-gap: 2px;
+    padding: 6px 10px;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+  .teams-row .team .team-emoji {
+    grid-row: 1 / span 2;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .teams-row .team .team-name {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: left;
+    font-size: 9px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .teams-row .team .team-req {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin: 0;
+  }
+  .teams-row .team .team-prestige {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    position: static;
+    margin: 0;
+    align-self: center;
+  }
 
   /* Supply tokens fill the column vertically */
   .supply-token {
