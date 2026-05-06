@@ -1174,6 +1174,124 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 28px;
 }
 
+/* Cinematic recruit card (full hero showcase) */
+.fly-card.cinematic-card {
+  border-width: 2px;
+  box-shadow:
+    0 0 60px rgba(255,212,0,0.55),
+    0 32px 70px rgba(0,0,0,0.7),
+    inset 0 0 30px rgba(255,200,80,0.18);
+  flex-direction: column;
+  padding: 4% 4% 6%;
+  font-size: inherit;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+.fly-card.cinematic-card[data-bonus="power"] { background: linear-gradient(160deg, #4a0e0e, #1a0303); border-color: var(--power-glow); box-shadow: 0 0 60px rgba(255,80,80,.5), 0 32px 70px rgba(0,0,0,0.7); }
+.fly-card.cinematic-card[data-bonus="space"] { background: linear-gradient(160deg, #0e2a4a, #03101f); border-color: var(--space-glow); box-shadow: 0 0 60px rgba(80,140,255,.5), 0 32px 70px rgba(0,0,0,0.7); }
+.fly-card.cinematic-card[data-bonus="time"]  { background: linear-gradient(160deg, #0e3a24, #03150d); border-color: var(--time-glow);  box-shadow: 0 0 60px rgba(80,255,140,.4), 0 32px 70px rgba(0,0,0,0.7); }
+.fly-card.cinematic-card[data-bonus="mind"]  { background: linear-gradient(160deg, #4a3a0e, #1c1303); border-color: var(--mind-glow);  box-shadow: 0 0 60px rgba(255,220,80,.5), 0 32px 70px rgba(0,0,0,0.7); }
+.fly-card.cinematic-card[data-bonus="soul"]  { background: linear-gradient(160deg, #34104a, #11041c); border-color: var(--soul-glow);  box-shadow: 0 0 60px rgba(180,80,255,.5), 0 32px 70px rgba(0,0,0,0.7); }
+.fly-card.cinematic-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(125deg, transparent 38%, rgba(255,255,255,0.18) 50%, transparent 62%);
+  background-size: 200% 200%;
+  animation: foilShift 2.5s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.cinema-art {
+  font-size: 96px;
+  line-height: 1;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.7));
+  margin: 8% 0 6%;
+}
+.cinema-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--ink);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  padding: 0 6%;
+  line-height: 1.2;
+}
+.cinema-prestige {
+  margin-top: 10px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffe27c, #d99c2b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgba(255, 200, 80, 0.5));
+}
+.cinema-bonus {
+  position: absolute;
+  top: 10px; left: 10px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.5);
+  border: 1.5px solid currentColor;
+  font-size: 22px;
+  font-weight: 900;
+}
+.cinema-bonus[data-stone="power"] { color: var(--power-color); text-shadow: 0 0 10px var(--power-color); }
+.cinema-bonus[data-stone="space"] { color: var(--space-color); text-shadow: 0 0 10px var(--space-color); }
+.cinema-bonus[data-stone="time"]  { color: var(--time-color);  text-shadow: 0 0 10px var(--time-color); }
+.cinema-bonus[data-stone="mind"]  { color: var(--mind-color);  text-shadow: 0 0 10px var(--mind-color); }
+.cinema-bonus[data-stone="soul"]  { color: var(--soul-color);  text-shadow: 0 0 10px var(--soul-color); }
+
+/* Recruit banner that appears under the cinematic card */
+.recruit-banner {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 96;
+  pointer-events: none;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 6px;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: recruitBannerIn .45s cubic-bezier(.2,1.2,.3,1) forwards;
+  animation-delay: .35s;
+}
+.recruit-banner small {
+  display: block;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 10px;
+  margin-bottom: 6px;
+  text-shadow: 0 0 14px rgba(255,212,0,0.7);
+}
+.recruit-banner span {
+  display: block;
+  font-size: clamp(28px, 5.5vw, 44px);
+  background: linear-gradient(180deg, #fff 0%, #c8b8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.8)) drop-shadow(0 0 20px rgba(180,140,255,0.5));
+  letter-spacing: 4px;
+}
+@keyframes recruitBannerIn {
+  0%   { opacity: 0; transform: translate(-50%, -50%) translateY(40px) scale(0.7); }
+  100% { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+.recruit-banner.fading {
+  animation: recruitBannerOut .35s ease forwards;
+}
+@keyframes recruitBannerOut {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(-30px) scale(0.95); }
+}
+
 /* Particle trail behind flying tokens */
 .particle {
   position: absolute;

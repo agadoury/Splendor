@@ -1107,9 +1107,6 @@
     if (card.prestige > 0) {
       scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
     }
-    if (card.tier === 3) {
-      impactBanner('LEGENDARY', card.hero.toUpperCase());
-    }
     showToast(`${player.name} recruited ${card.hero}!`, 'success');
   }
 
@@ -1135,7 +1132,6 @@
     if (card.prestige > 0) {
       scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
     }
-    if (card.tier === 3) impactBanner('LEGENDARY', card.hero.toUpperCase());
     showToast(`${player.name} recruited ${card.hero}!`, 'success');
   }
 
@@ -1404,54 +1400,106 @@
   }
 
   async function animateBuy(playerIdx, src, card) {
-    // Briefly flash card on board into the player area
     const fxLayer = $('#fx-layer');
     let srcEl;
     if (src.reserved) {
-      // From drawer or just bonus area
       srcEl = $(`#${playerIdx === 0 ? 'panel-you' : 'panel-opponent'}`);
     } else {
       srcEl = document.querySelector(`#tier-${src.tier} .card[data-slot="${src.slot}"]`);
     }
     if (!srcEl) return;
     const sRect = srcEl.getBoundingClientRect();
-    const target = playerIdx === 0 ? $(`#res-you-${card.bonus}`) : $(`#res-opp-${card.bonus}`);
+    const stripEl = playerIdx === 0 ? $('#you-heroes') : $('#opp-heroes');
+    const fallbackEl = playerIdx === 0 ? $(`#res-you-${card.bonus}`) : $(`#res-opp-${card.bonus}`);
+    const target = stripEl || fallbackEl;
     if (!target) return;
-    const tRect = target.getBoundingClientRect();
     const burstColor = STONE_META[card.bonus]?.color || '#ffd400';
 
     if (!state.animsOn) {
-      // skip flight; just fire a brief burst
-      fireHeroBurst(sRect.left + sRect.width/2, sRect.top + sRect.height/2, burstColor);
-      target.classList.remove('bumped'); void target.offsetWidth; target.classList.add('bumped');
+      fireHeroBurst(sRect.left + sRect.width / 2, sRect.top + sRect.height / 2, burstColor);
+      if (fallbackEl) {
+        fallbackEl.classList.remove('bumped'); void fallbackEl.offsetWidth; fallbackEl.classList.add('bumped');
+      }
       return;
     }
 
-    // Hero entrance burst at the card's origin position
-    fireHeroBurst(sRect.left + sRect.width/2, sRect.top + sRect.height/2, burstColor);
+    // 1) Burst at the card's origin
+    fireHeroBurst(sRect.left + sRect.width / 2, sRect.top + sRect.height / 2, burstColor);
 
+    // 2) Build cinematic card showing full hero details
+    const meta = STONE_META[card.bonus];
     const ghost = document.createElement('div');
-    ghost.className = 'fly-card';
+    ghost.className = 'fly-card cinematic-card';
+    ghost.dataset.bonus = card.bonus;
     ghost.style.width = sRect.width + 'px';
     ghost.style.height = sRect.height + 'px';
     ghost.style.left = sRect.left + 'px';
     ghost.style.top = sRect.top + 'px';
-    ghost.style.transition = 'transform .65s cubic-bezier(.4,1.4,.4,1), opacity .6s ease';
-    ghost.textContent = card.emoji;
+    ghost.innerHTML = `
+      <div class="cinema-bonus" data-stone="${card.bonus}">${meta.symbol}</div>
+      <div class="cinema-art">${card.emoji}</div>
+      <div class="cinema-name">${card.hero}</div>
+      ${card.prestige > 0 ? `<div class="cinema-prestige">${card.prestige} ★</div>` : ''}
+    `;
     fxLayer.appendChild(ghost);
 
-    const dx = (tRect.left + tRect.width/2) - (sRect.left + sRect.width/2);
-    const dy = (tRect.top + tRect.height/2) - (sRect.top + sRect.height/2);
-    const scale = Math.min(tRect.width / sRect.width, 0.4);
+    // 3) Banner element
+    const banner = document.createElement('div');
+    banner.className = 'recruit-banner';
+    const headline = playerIdx === 0
+      ? (card.tier === 3 ? 'I HAVE RECRUITED A LEGEND' : 'I HAVE RECRUITED THIS HERO')
+      : `${state.players[1].name.toUpperCase()} HAS RECRUITED`;
+    banner.innerHTML = `<small>${headline}</small><span>${card.hero}</span>`;
+    document.body.appendChild(banner);
 
-    await new Promise(r => requestAnimationFrame(() => {
-      ghost.style.transform = `translate(${dx}px, ${dy}px) rotateY(360deg) scale(${scale})`;
-      ghost.style.opacity = '0.0';
-      setTimeout(() => { ghost.remove(); r(); }, 700);
-    }));
-    target.classList.remove('bumped');
-    void target.offsetWidth;
-    target.classList.add('bumped');
+    // 4) Phase 1 — fly to centre and scale up dramatically
+    const winW = window.innerWidth, winH = window.innerHeight;
+    // size the centred card to fit nicely on the screen (45% width on mobile, less on desktop)
+    const targetW = Math.min(winW * 0.6, 320);
+    const cardScale = targetW / sRect.width;
+    const centerOffsetX = winW / 2 - (sRect.left + sRect.width / 2);
+    // Position banner below the card, so push card up a bit
+    const cardY = winH * 0.42;
+    const centerOffsetY = cardY - (sRect.top + sRect.height / 2);
+
+    ghost.style.transition = 'transform .55s cubic-bezier(.2,1.2,.3,1), box-shadow .5s ease';
+    ghost.style.zIndex = '94';
+    requestAnimationFrame(() => {
+      ghost.style.transform = `translate(${centerOffsetX}px, ${centerOffsetY}px) rotateY(360deg) scale(${cardScale})`;
+    });
+
+    // Position banner below where the card will land
+    banner.style.top = (cardY + (sRect.height * cardScale) / 2 + 30) + 'px';
+
+    await sleep(560);
+
+    // 5) Hold beat
+    await sleep(750);
+
+    // 6) Phase 2 — fade banner, shrink and fly to the heroes strip
+    banner.classList.add('fading');
+
+    const tRect = target.getBoundingClientRect();
+    // If the strip is empty its rect height may be tiny, so fall back to its centre
+    const dx = (tRect.left + tRect.width / 2) - (sRect.left + sRect.width / 2);
+    const dy = (tRect.top + tRect.height / 2) - (sRect.top + sRect.height / 2);
+    const finalScale = Math.max(0.15, Math.min(tRect.width * 0.18 / sRect.width, 0.35));
+
+    ghost.style.transition = 'transform .55s cubic-bezier(.5,0,.7,1), opacity .5s ease .15s';
+    ghost.style.transform = `translate(${dx}px, ${dy}px) rotate(8deg) scale(${finalScale})`;
+    ghost.style.opacity = '0';
+
+    await sleep(620);
+
+    ghost.remove();
+    banner.remove();
+
+    // Bump the bonus tile so the +1 is noticeable
+    if (fallbackEl) {
+      fallbackEl.classList.remove('bumped');
+      void fallbackEl.offsetWidth;
+      fallbackEl.classList.add('bumped');
+    }
   }
 
   function fireHeroBurst(x, y, color) {
