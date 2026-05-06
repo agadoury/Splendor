@@ -2016,8 +2016,8 @@ button { font-family: inherit; cursor: pointer; }
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas:
       "topbar  topbar topbar"
-      "opp     teams  supply"
-      "you     board  supply"
+      "teams   teams  teams"
+      "opp     board  supply"
       "actions actions actions";
     column-gap: 10px;
     row-gap: 8px;
@@ -2026,8 +2026,14 @@ button { font-family: inherit; cursor: pointer; }
 
   .topbar { grid-area: topbar; position: relative; top: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 0; padding: 6px 10px; }
   .player-panel.opponent { grid-area: opp; margin: 0; align-self: start; }
-  .player-panel.you { grid-area: you; margin: 0; align-self: end; }
-  .teams-row { grid-area: teams; margin: 0; padding: 0; align-self: start; align-items: flex-start; }
+  /* "you" panel shares the left column with opp; pinned to the bottom of row 3 */
+  .player-panel.you {
+    grid-column: 1;
+    grid-row: 3;
+    margin: 0;
+    align-self: end;
+  }
+  .teams-row { grid-area: teams; margin: 0; padding: 0; justify-content: center; align-items: center; }
   .board { grid-area: board; padding: 0; min-height: 0; overflow-y: auto; align-self: stretch; }
   .supply { grid-area: supply; padding: 0; grid-template-columns: 1fr; grid-auto-rows: minmax(0, 1fr); align-content: stretch; gap: 6px; max-height: 100%; overflow: hidden; }
   .action-bar { grid-area: actions; margin: 0; border-radius: 10px; position: relative; bottom: auto; }
