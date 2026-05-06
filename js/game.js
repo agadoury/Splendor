@@ -82,9 +82,11 @@
     $('#btn-opp-drawer-close').addEventListener('click', () => { SFX.deselect(); $('#opp-drawer').classList.remove('open'); });
     $('#btn-menu').addEventListener('click', () => {
       if (confirm('Restart the saga?')) {
+        SFX.stopAmbient();
         $('#splash').classList.add('active');
         $('#game').classList.remove('active');
         $('#reserved-drawer').classList.remove('open');
+        $('#opp-drawer')?.classList.remove('open');
       }
     });
 
@@ -121,7 +123,76 @@
 
     setupKeyboardShortcuts();
     setupTooltip();
+    setupCardTilt();
     SFX.init();
+  }
+
+  // ---------- Polish helpers ----------
+  function shake(level = 1) {
+    const g = $('#game');
+    const cls = `shake-${Math.min(3, Math.max(1, level))}`;
+    g.classList.remove('shake-1', 'shake-2', 'shake-3');
+    void g.offsetWidth;
+    g.classList.add(cls);
+    setTimeout(() => g.classList.remove(cls), 900);
+  }
+
+  function scorePopup(amount, opts = {}) {
+    const target = opts.target || $(opts.atSelector || '#you-prestige');
+    if (!target) return;
+    const r = target.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'score-pop' + (opts.team ? ' team' : '');
+    el.textContent = (amount > 0 ? `+${amount}` : `${amount}`) + '★';
+    el.style.left = (r.left + r.width / 2) + 'px';
+    el.style.top = (r.top - 4) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+
+  function impactBanner(text, sub) {
+    const el = document.createElement('div');
+    el.className = 'impact-banner';
+    el.innerHTML = text + (sub ? `<small>${sub}</small>` : '');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1700);
+  }
+
+  function turnFlash(playerName, color) {
+    const el = document.createElement('div');
+    el.className = 'turn-flash';
+    el.textContent = playerName.toUpperCase() + "'S TURN";
+    if (color) el.style.setProperty('--turn-glow', color);
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1100);
+  }
+
+  // ---------- 3D card tilt (desktop hover) ----------
+  function setupCardTilt() {
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const onMove = (e) => {
+      const card = e.target.closest('.card[data-hero]');
+      if (!card || card.classList.contains('card-empty')) return;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;   // 0..1
+      const py = (e.clientY - r.top) / r.height;   // 0..1
+      const rx = (px - 0.5) * 14;   // -7..+7 degrees
+      const ry = (0.5 - py) * 14;
+      card.style.setProperty('--rx', rx + 'deg');
+      card.style.setProperty('--ry', ry + 'deg');
+      card.style.setProperty('--mx', (px * 100) + '%');
+      card.style.setProperty('--my', (py * 100) + '%');
+      card.classList.add('tilting');
+    };
+    const onLeave = (e) => {
+      const card = e.target.closest('.card[data-hero]');
+      if (!card) return;
+      card.classList.remove('tilting');
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseout', onLeave, true);
   }
 
   // ---------- Keyboard shortcuts (desktop) ----------
@@ -338,14 +409,21 @@
     // 3 random teams (n+1 in real splendor, with 2 players use 3)
     state.teams = shuffle(TEAMS.slice()).slice(0, 3);
 
-    $('#splash').classList.remove('active');
-    $('#endgame').classList.remove('active');
-    $('#game').classList.add('active');
-
-    renderAll();
-    updateSelectionInfo();
-    setActiveTurnIndicator();
-    showToast('The saga begins!', 'success');
+    // Cinematic splash → game transition
+    const splashEl = $('#splash');
+    const gameEl = $('#game');
+    splashEl.classList.add('dissolving');
+    setTimeout(() => {
+      splashEl.classList.remove('active', 'dissolving');
+      $('#endgame').classList.remove('active');
+      gameEl.classList.add('active', 'entering');
+      renderAll();
+      updateSelectionInfo();
+      setActiveTurnIndicator();
+      SFX.startAmbient();
+      impactBanner('ASSEMBLE', 'THE SAGA BEGINS');
+      setTimeout(() => gameEl.classList.remove('entering'), 900);
+    }, 480);
   }
 
   function shuffle(arr) {
@@ -976,7 +1054,8 @@
       state.turn = 1;
       setActiveTurnIndicator();
       updateSelectionInfo();
-      await sleep(700);
+      turnFlash(state.players[1].name, '#ed1d24');
+      await sleep(900);
       await runAITurn();
     } catch (e) {
       console.error(e);
@@ -1019,11 +1098,18 @@
 
     SFX.recruit();
     if (playerIdx === 0) SFX.haptics.success();
+    if (card.tier >= 3) shake(2); else if (card.tier === 2) shake(1);
     await animateBuy(playerIdx, { tier, slot }, card);
     renderSupply();
     renderBoard({ flipSlots: [{ tier, slot }] });
     renderPlayer(playerIdx);
     renderTeams();
+    if (card.prestige > 0) {
+      scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
+    }
+    if (card.tier === 3) {
+      impactBanner('LEGENDARY', card.hero.toUpperCase());
+    }
     showToast(`${player.name} recruited ${card.hero}!`, 'success');
   }
 
@@ -1040,11 +1126,16 @@
 
     SFX.recruit();
     if (playerIdx === 0) SFX.haptics.success();
+    if (card.tier >= 3) shake(2); else if (card.tier === 2) shake(1);
     await animateBuy(playerIdx, { reserved: true, idx }, card);
     renderSupply();
     renderPlayer(playerIdx);
     renderReservedDrawer();
     renderTeams();
+    if (card.prestige > 0) {
+      scorePopup(card.prestige, { atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige' });
+    }
+    if (card.tier === 3) impactBanner('LEGENDARY', card.hero.toUpperCase());
     showToast(`${player.name} recruited ${card.hero}!`, 'success');
   }
 
@@ -1093,9 +1184,15 @@
       state.teams.splice(claimed.idx, 1);
       SFX.teamClaim();
       if (playerIdx === 0) SFX.haptics.victory();
+      shake(2);
+      impactBanner('TEAM UP', claimed.team.name.toUpperCase());
       await animateTeamClaim(playerIdx, claimed.team);
       renderTeams();
       renderPlayer(playerIdx);
+      scorePopup(claimed.team.prestige, {
+        atSelector: playerIdx === 0 ? '#you-prestige' : '#opp-prestige',
+        team: true
+      });
       showToast(`${claimed.team.name} joins ${player.name}! +${claimed.team.prestige}★`, 'success');
     }
   }
@@ -1132,6 +1229,7 @@
     updateSelectionInfo();
     SFX.turnChime();
     SFX.haptics.tap();
+    turnFlash('Your', '#ffd400');
     state.busy = false;
   }
 
@@ -1186,12 +1284,15 @@
     const sub = $('#endgame-sub');
     const stats = $('#endgame-stats');
 
+    SFX.stopAmbient();
     if (winnerIdx === 0) {
       title.textContent = 'VICTORY!';
       title.style.background = 'linear-gradient(180deg, #ffe27c 0%, #d99c2b 100%)';
       title.style.webkitBackgroundClip = 'text';
       title.style.backgroundClip = 'text';
       sub.textContent = `You triumphed over ${p1.name}.`;
+      shake(3);
+      impactBanner('VICTORY', 'EARTH IS SAFE');
       launchConfetti();
       SFX.victory();
       SFX.haptics.victory();
@@ -1201,6 +1302,8 @@
       title.style.webkitBackgroundClip = 'text';
       title.style.backgroundClip = 'text';
       sub.textContent = `${p1.name} achieved cosmic dominance.`;
+      shake(3);
+      impactBanner('DEFEAT', `${p1.name.toUpperCase()} REIGNS`);
       SFX.defeat();
       SFX.haptics.error();
     } else {

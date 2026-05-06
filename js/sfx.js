@@ -171,8 +171,53 @@ const SFX = (() => {
     victory: () => buzz([10, 30, 10, 30, 10, 30, 60]),
   };
 
+  // ---- Ambient cosmic hum (soft drone) ----
+  let ambient = null;
+  function startAmbient() {
+    if (!enabled || !ctx || ambient) return;
+    ensure(); resume();
+    const a = {};
+    a.gain = ctx.createGain();
+    a.gain.gain.value = 0;
+    a.gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 2.0);
+    a.gain.connect(master);
+
+    // Two detuned low oscillators + a slow LFO on filter for movement
+    a.osc1 = ctx.createOscillator(); a.osc1.type = 'sawtooth'; a.osc1.frequency.value = 55;
+    a.osc2 = ctx.createOscillator(); a.osc2.type = 'sine';     a.osc2.frequency.value = 82;
+    a.osc3 = ctx.createOscillator(); a.osc3.type = 'sine';     a.osc3.frequency.value = 110;
+    a.filter = ctx.createBiquadFilter(); a.filter.type = 'lowpass'; a.filter.frequency.value = 280; a.filter.Q.value = 4;
+
+    // LFO on filter cutoff for breathing
+    a.lfo = ctx.createOscillator(); a.lfo.frequency.value = 0.07; a.lfo.type = 'sine';
+    a.lfoGain = ctx.createGain(); a.lfoGain.gain.value = 80;
+    a.lfo.connect(a.lfoGain).connect(a.filter.frequency);
+
+    [a.osc1, a.osc2, a.osc3].forEach(o => o.connect(a.filter));
+    a.filter.connect(a.gain);
+
+    a.osc1.start(); a.osc2.start(); a.osc3.start(); a.lfo.start();
+    ambient = a;
+  }
+  function stopAmbient() {
+    if (!ambient || !ctx) return;
+    const a = ambient;
+    const t = ctx.currentTime;
+    a.gain.gain.cancelScheduledValues(t);
+    a.gain.gain.setValueAtTime(a.gain.gain.value, t);
+    a.gain.gain.linearRampToValueAtTime(0, t + 0.5);
+    setTimeout(() => {
+      try { a.osc1.stop(); a.osc2.stop(); a.osc3.stop(); a.lfo.stop(); } catch(e){}
+    }, 600);
+    ambient = null;
+  }
+
   // ---- Settings ----
-  function setSfx(v) { enabled = v; savePref('sfx', v); if (v) { ensure(); resume(); turnChime(); } }
+  function setSfx(v) {
+    enabled = v; savePref('sfx', v);
+    if (v) { ensure(); resume(); turnChime(); }
+    else { stopAmbient(); }
+  }
   function setHaptics(v) { hapticsEnabled = v; savePref('haptics', v); if (v) buzz(20); }
   function isSfxOn() { return enabled; }
   function isHapticsOn() { return hapticsEnabled; }
@@ -186,6 +231,7 @@ const SFX = (() => {
   return {
     init, pickToken, shimmer, recruit, reserve, teamClaim, tap, deselect, error,
     victory, defeat, turnChime,
+    startAmbient, stopAmbient,
     haptics,
     setSfx, setHaptics, isSfxOn, isHapticsOn
   };
