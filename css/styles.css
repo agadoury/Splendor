@@ -842,6 +842,32 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   animation: pop .3s ease;
 }
+
+/* "+2" button: appears on the single-selected token when a pair is legal. */
+.supply-token .pair-button {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #f0e6d2;
+  background: linear-gradient(180deg, var(--accent), #015060);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 0 14px rgba(3, 151, 171, 0.85), 0 4px 10px rgba(0,0,0,0.6);
+  animation: pairPulse 1.4s ease-in-out infinite, pop .3s ease;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: 0.5px;
+}
+.supply-token .pair-button:hover { filter: brightness(1.1); transform: scale(1.05); }
+.supply-token .pair-button:active { transform: scale(0.95); }
+@keyframes pairPulse {
+  50% { box-shadow: 0 0 22px rgba(3, 151, 171, 1), 0 4px 10px rgba(0,0,0,0.6); }
+}
 @keyframes pop {
   from { transform: scale(0); }
   to { transform: scale(1); }

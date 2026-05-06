@@ -802,44 +802,37 @@
       showToast("Hexgold (wild) essence is only gained by marking a champion.", 'error');
       return;
     }
+
+    const counts = {};
+    for (const s of sel) counts[s] = (counts[s] || 0) + 1;
+
+    // ----- Click on an already-selected essence -> deselect one instance -----
+    if (counts[stone] > 0) {
+      const idx = sel.lastIndexOf(stone);
+      sel.splice(idx, 1);
+      SFX.deselect(); SFX.haptics.tap();
+      refreshSelectionUI();
+      return;
+    }
+
+    // ----- Click on a NEW essence -> try to add it -----
     if ((state.supply[stone] || 0) === 0) {
       SFX.error(); SFX.haptics.error();
       showToast('No more of that essence in the pool.', 'error');
       return;
     }
-
-    // Selection rules: you can pick up to 3 different OR 2 of the same.
-    const counts = {};
-    for (const s of sel) counts[s] = (counts[s] || 0) + 1;
-
-    // If clicking same stone already at 1: try to make pair
-    if (counts[stone]) {
-      if (sel.length !== 1) {
-        SFX.error(); SFX.haptics.error();
-        showToast('Channel 3 different essences OR 2 of the same.', 'error');
-        return;
-      }
-      if (state.supply[stone] < 4) {
-        SFX.error(); SFX.haptics.error();
-        showToast('Need 4+ in the pool to channel 2 of the same.', 'error');
-        return;
-      }
-      sel.push(stone);
-    } else {
-      // Different stone
-      if (sel.length >= 3) {
-        SFX.error(); SFX.haptics.error();
-        showToast('Maximum of 3 different essences.', 'error');
-        return;
-      }
-      // If we already have a pair, cannot add more
-      if (Object.values(counts).some(v => v >= 2)) {
-        SFX.error(); SFX.haptics.error();
-        showToast('You already chose a pair — you cannot add more.', 'error');
-        return;
-      }
-      sel.push(stone);
+    if (sel.length >= 3) {
+      SFX.error(); SFX.haptics.error();
+      showToast('Maximum of 3 different essences.', 'error');
+      return;
     }
+    if (Object.values(counts).some(v => v >= 2)) {
+      SFX.error(); SFX.haptics.error();
+      showToast('You already chose a pair — you cannot add more.', 'error');
+      return;
+    }
+
+    sel.push(stone);
 
     // Hand-size pre-check
     const me = state.players[0];
@@ -852,6 +845,23 @@
     }
 
     SFX.pickToken(stone); SFX.haptics.tap();
+    refreshSelectionUI();
+  }
+
+  function tryUpgradeToPair(stone) {
+    if (state.turn !== 0 || state.busy) return;
+    const sel = state.selection.stones;
+    // Must currently be a single selection of this stone, with supply >= 4
+    if (sel.length !== 1 || sel[0] !== stone) return;
+    if ((state.supply[stone] || 0) < 4) return;
+    const me = state.players[0];
+    if (totalStonesOf(me) + sel.length + 1 > MAX_HAND) {
+      SFX.error(); SFX.haptics.error();
+      showToast(`Cannot exceed ${MAX_HAND} essences.`, 'error');
+      return;
+    }
+    sel.push(stone);
+    SFX.pickToken(stone); SFX.haptics.confirm();
     refreshSelectionUI();
   }
 
@@ -930,6 +940,7 @@
     // Clear all visual selections
     $$('.supply-token.selected').forEach(el => el.classList.remove('selected'));
     $$('.supply-token .selection-bubble').forEach(el => el.remove());
+    $$('.supply-token .pair-button').forEach(el => el.remove());
     $$('.card.selected').forEach(el => el.classList.remove('selected'));
 
     const sel = state.selection.stones;
@@ -944,6 +955,18 @@
           b.className = 'selection-bubble';
           b.textContent = counts[s];
           el.appendChild(b);
+        }
+        // Show "+2" button when this is a single selection and pair is legal
+        if (counts[s] === 1 && sel.length === 1 && (state.supply[s] || 0) >= 4) {
+          const pb = document.createElement('button');
+          pb.className = 'pair-button';
+          pb.title = 'Channel 2 of this essence';
+          pb.textContent = '+2';
+          pb.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            tryUpgradeToPair(s);
+          });
+          el.appendChild(pb);
         }
       }
     }
