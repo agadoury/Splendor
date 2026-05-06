@@ -1567,7 +1567,19 @@ button { font-family: inherit; cursor: pointer; }
 .cost-pip[data-stone="time"]    { --gem-1: #76ffb1; --gem-2: #006b2f; color:#fff; }
 .cost-pip[data-stone="mind"]    { --gem-1: #ffe27c; --gem-2: #6b4f00; color:#1a1100; }
 .cost-pip[data-stone="soul"]    { --gem-1: #d99cff; --gem-2: #4a0080; color:#fff; }
-.cost-pip.unmet { opacity: 0.42; filter: saturate(0.35) drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+/* Still missing essence — keep the gem fully saturated so the colour is
+   instantly readable; the red halo + slightly bolder digit signal "missing". */
+.cost-pip.unmet {
+  filter: drop-shadow(0 0 5px rgba(255, 60, 60, 0.95))
+          drop-shadow(0 0 2px rgba(255, 60, 60, 0.85))
+          drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  font-weight: 900;
+  animation: unmetPulse 1.9s ease-in-out infinite;
+}
+@keyframes unmetPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 60, 60, 0.85)) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(255, 60, 60, 1)) drop-shadow(0 0 3px rgba(255, 60, 60, 0.9)) drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+}
 
 /* Covered entirely by your owned-card bonuses — green halo + check glyph */
 .cost-pip.covered-bonus {
