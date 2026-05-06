@@ -176,8 +176,8 @@
       const r = card.getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width;   // 0..1
       const py = (e.clientY - r.top) / r.height;   // 0..1
-      const rx = (px - 0.5) * 14;   // -7..+7 degrees
-      const ry = (0.5 - py) * 14;
+      const rx = (px - 0.5) * 6;   // -3..+3 degrees
+      const ry = (0.5 - py) * 6;
       card.style.setProperty('--rx', rx + 'deg');
       card.style.setProperty('--ry', ry + 'deg');
       card.style.setProperty('--mx', (px * 100) + '%');
