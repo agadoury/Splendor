@@ -86,8 +86,28 @@
         <span class="brand-marvel">MARVEL</span>
         <span class="brand-splendor">SPLENDOR</span>
       </div>
-      <button class="icon-btn" id="btn-help" aria-label="Help">?</button>
+      <div style="display:flex; gap:6px;">
+        <button class="icon-btn" id="btn-settings" aria-label="Settings">⚙</button>
+        <button class="icon-btn" id="btn-help" aria-label="Help">?</button>
+      </div>
     </header>
+
+    <!-- Settings popover -->
+    <div class="settings-sheet" id="settings-sheet">
+      <h4>Settings</h4>
+      <div class="toggle-row">
+        <span>Sound effects</span>
+        <div class="switch" id="toggle-sfx" role="switch" tabindex="0"></div>
+      </div>
+      <div class="toggle-row">
+        <span>Haptics (mobile)</span>
+        <div class="switch" id="toggle-haptics" role="switch" tabindex="0"></div>
+      </div>
+      <div class="toggle-row">
+        <span>Animations</span>
+        <div class="switch on" id="toggle-anims" role="switch" tabindex="0"></div>
+      </div>
+    </div>
 
     <!-- Opponent panel -->
     <section class="player-panel opponent" id="panel-opponent">
@@ -179,6 +199,7 @@
   </div>
 
   <script src="js/cards.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/game.js"></script>
 </body>

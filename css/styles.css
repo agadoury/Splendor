@@ -864,6 +864,67 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* =========================================================
+   Settings sheet
+   ========================================================= */
+.settings-sheet {
+  position: fixed;
+  top: 56px; right: 8px;
+  width: 240px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--border-bright);
+  border-radius: 14px;
+  padding: 14px;
+  z-index: 65;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.55);
+  transform: translateY(-12px) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: top right;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.settings-sheet.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.settings-sheet h4 {
+  margin: 0 0 10px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+}
+.toggle-row:first-of-type { border-top: 0; }
+.switch {
+  position: relative;
+  width: 40px; height: 22px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .2s ease;
+  flex-shrink: 0;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #ddd;
+  transition: transform .2s ease, background .2s ease;
+}
+.switch.on { background: linear-gradient(135deg, #ed1d24, #800); border-color: #ff5050; }
+.switch.on::after { transform: translateX(18px); background: var(--gold); }
+
+/* =========================================================
    Toast
    ========================================================= */
 .toast {
@@ -926,6 +987,93 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: 0 0 30px rgba(255,212,0,0.6);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px;
+}
+
+/* Particle trail behind flying tokens */
+.particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: particleFade .65s ease-out forwards;
+  filter: blur(0.5px);
+}
+.particle[data-stone="power"]   { background: var(--power-glow);   box-shadow: 0 0 8px var(--power-color); }
+.particle[data-stone="space"]   { background: var(--space-glow);   box-shadow: 0 0 8px var(--space-color); }
+.particle[data-stone="time"]    { background: var(--time-glow);    box-shadow: 0 0 8px var(--time-color); }
+.particle[data-stone="mind"]    { background: var(--mind-glow);    box-shadow: 0 0 8px var(--mind-color); }
+.particle[data-stone="soul"]    { background: var(--soul-glow);    box-shadow: 0 0 8px var(--soul-color); }
+.particle[data-stone="reality"] { background: var(--reality-glow); box-shadow: 0 0 8px var(--reality-color); }
+@keyframes particleFade {
+  0%   { opacity: 1; transform: translate(0,0) scale(1.2); }
+  100% { opacity: 0; transform: translate(var(--dx,0), var(--dy,8px)) scale(0.2); }
+}
+
+/* Hero recruit "entrance" burst */
+.hero-burst {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--burst-color, #ffd400) 0%, transparent 60%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: burst 0.9s cubic-bezier(.2,.9,.3,1) forwards;
+}
+@keyframes burst {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  20%  { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+}
+.hero-burst-ring {
+  position: absolute;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 3px solid var(--burst-color, #ffd400);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.3);
+  animation: burstRing 0.9s ease-out forwards;
+}
+@keyframes burstRing {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.8); border-width: 0.5px; }
+}
+
+/* Card flip-in when refilling the board */
+.card.flipping-in {
+  animation: flipIn 0.55s cubic-bezier(.2,.9,.3,1.2);
+  transform-style: preserve-3d;
+}
+@keyframes flipIn {
+  0%   { transform: rotateY(180deg) scale(0.85); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: rotateY(0) scale(1); opacity: 1; }
+}
+
+/* Affordable card pulse already exists; intensify with shimmer sweep */
+.card.affordable::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,212,0,0.18) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 2.4s linear infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+@keyframes shimmerSweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Token "lift" + glow when selected in supply */
+.supply-token.selected {
+  filter: drop-shadow(0 8px 16px var(--tk-glow));
+  animation: tokenBob 1.2s ease-in-out infinite;
+}
+@keyframes tokenBob {
+  0%,100% { transform: translateY(-4px); }
+  50%     { transform: translateY(-7px); }
 }
 
 /* =========================================================

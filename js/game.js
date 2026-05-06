@@ -7,6 +7,7 @@
   const state = {
     started: false,
     difficulty: 'easy',
+    animsOn: true,
     turn: 0,             // 0 = you, 1 = opponent
     supply: {},
     decks: {},           // tier -> array of cards
@@ -63,10 +64,10 @@
       });
     });
 
-    $('#btn-cancel').addEventListener('click', cancelSelection);
-    $('#btn-confirm').addEventListener('click', confirmSelection);
-    $('#btn-reserved').addEventListener('click', () => $('#reserved-drawer').classList.toggle('open'));
-    $('#btn-drawer-close').addEventListener('click', () => $('#reserved-drawer').classList.remove('open'));
+    $('#btn-cancel').addEventListener('click', () => { SFX.deselect(); SFX.haptics.tap(); cancelSelection(); });
+    $('#btn-confirm').addEventListener('click', () => { SFX.haptics.confirm(); confirmSelection(); });
+    $('#btn-reserved').addEventListener('click', () => { SFX.tap(); SFX.haptics.tap(); $('#reserved-drawer').classList.toggle('open'); });
+    $('#btn-drawer-close').addEventListener('click', () => { SFX.deselect(); $('#reserved-drawer').classList.remove('open'); });
     $('#btn-menu').addEventListener('click', () => {
       if (confirm('Restart the saga?')) {
         $('#splash').classList.add('active');
@@ -74,6 +75,39 @@
         $('#reserved-drawer').classList.remove('open');
       }
     });
+
+    // Settings sheet
+    const settingsSheet = $('#settings-sheet');
+    $('#btn-settings').addEventListener('click', (e) => {
+      e.stopPropagation();
+      SFX.tap();
+      settingsSheet.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!settingsSheet.contains(e.target) && e.target.id !== 'btn-settings') {
+        settingsSheet.classList.remove('open');
+      }
+    });
+    function bindSwitch(id, getVal, setVal) {
+      const el = $('#' + id);
+      const sync = () => el.classList.toggle('on', getVal());
+      sync();
+      const handler = () => {
+        SFX.tap();
+        setVal(!getVal());
+        sync();
+      };
+      el.addEventListener('click', handler);
+      el.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); handler(); } });
+    }
+    bindSwitch('toggle-sfx', SFX.isSfxOn, SFX.setSfx);
+    bindSwitch('toggle-haptics', SFX.isHapticsOn, SFX.setHaptics);
+    bindSwitch('toggle-anims', () => state.animsOn, v => { state.animsOn = v; try { localStorage.setItem('splendor.anims', v ? '1':'0'); } catch(e){} });
+    // Load anim pref
+    try { const v = localStorage.getItem('splendor.anims'); if (v !== null) state.animsOn = (v === '1'); } catch (e) {}
+    $('#toggle-anims').classList.toggle('on', state.animsOn);
+
+    SFX.init();
   }
 
   function startGame() {
@@ -157,13 +191,15 @@
     }
   }
 
-  function renderBoard() {
+  function renderBoard(opts = {}) {
+    const flipSet = new Set((opts.flipSlots || []).map(s => `${s.tier}:${s.slot}`));
     for (const tier of [1,2,3]) {
       const cont = $(`#tier-${tier}`);
       cont.innerHTML = '';
       for (let i = 0; i < 4; i++) {
         const card = state.board[tier][i];
         const el = card ? renderCard(card, { tier, slot: i }) : renderEmptyCard();
+        if (card && state.animsOn && flipSet.has(`${tier}:${i}`)) el.classList.add('flipping-in');
         cont.appendChild(el);
       }
       const deck = $(`#deck-${tier}`);
@@ -363,10 +399,12 @@
 
     const sel = state.selection.stones;
     if (stone === 'reality') {
+      SFX.error(); SFX.haptics.error();
       showToast("Reality (wild) stones can only be gained by reserving a hero card.", 'error');
       return;
     }
     if ((state.supply[stone] || 0) === 0) {
+      SFX.error(); SFX.haptics.error();
       showToast('No more of those stones in the supply.', 'error');
       return;
     }
@@ -378,10 +416,12 @@
     // If clicking same stone already at 1: try to make pair
     if (counts[stone]) {
       if (sel.length !== 1) {
+        SFX.error(); SFX.haptics.error();
         showToast('You can take 3 different OR 2 of the same.', 'error');
         return;
       }
       if (state.supply[stone] < 4) {
+        SFX.error(); SFX.haptics.error();
         showToast('Need 4+ stones in supply to take 2 of the same.', 'error');
         return;
       }
@@ -389,11 +429,13 @@
     } else {
       // Different stone
       if (sel.length >= 3) {
+        SFX.error(); SFX.haptics.error();
         showToast('Maximum of 3 different stones.', 'error');
         return;
       }
       // If we already have a pair, cannot add more
       if (Object.values(counts).some(v => v >= 2)) {
+        SFX.error(); SFX.haptics.error();
         showToast('You already chose a pair — you cannot add more.', 'error');
         return;
       }
@@ -405,10 +447,12 @@
     const totalAfter = totalStonesOf(me) + sel.length;
     if (totalAfter > MAX_HAND) {
       sel.pop();
+      SFX.error(); SFX.haptics.error();
       showToast(`Cannot exceed ${MAX_HAND} stones in hand.`, 'error');
       return;
     }
 
+    SFX.pickToken(stone); SFX.haptics.tap();
     refreshSelectionUI();
   }
 
@@ -427,11 +471,13 @@
     // Reserved card: try to buy
     if (ctx?.reserved) {
       if (!canAfford(me, card)) {
+        SFX.error(); SFX.haptics.error();
         showToast('Not enough stones to recruit this hero.', 'error');
         return;
       }
       state.selection.buyReservedIdx = ctx.reservedIdx;
       state.selection.buyTier = null; state.selection.buySlot = null;
+      SFX.tap(); SFX.haptics.tap();
       refreshSelectionUI();
       return;
     }
@@ -447,6 +493,7 @@
       state.selection.reserveSlot = null;
     } else {
       if (me.reserved.length >= MAX_RESERVE) {
+        SFX.error(); SFX.haptics.error();
         showToast('Reserve full (3 cards max).', 'error');
         return;
       }
@@ -455,18 +502,21 @@
       state.selection.buyTier = null;
       state.selection.buySlot = null;
     }
+    SFX.tap(); SFX.haptics.tap();
     refreshSelectionUI();
   }
 
   function onDeckClick(tier) {
     if (state.turn !== 0 || state.busy) return;
     if (state.decks[tier].length === 0) {
+      SFX.error(); SFX.haptics.error();
       showToast('Deck is empty.', 'error');
       return;
     }
     if (state.selection.stones.length > 0) cancelSelection();
     const me = state.players[0];
     if (me.reserved.length >= MAX_RESERVE) {
+      SFX.error(); SFX.haptics.error();
       showToast('Reserve full (3 cards max).', 'error');
       return;
     }
@@ -643,6 +693,9 @@
       state.supply[s]--;
       player.stones[s] = (player.stones[s] || 0) + 1;
     }
+    if (stones.length >= 2) SFX.shimmer();
+    else if (stones.length === 1) SFX.pickToken(stones[0]);
+    if (playerIdx === 0) SFX.haptics.success();
     await animateGather(playerIdx, stones);
     renderSupply();
     renderPlayer(playerIdx);
@@ -665,9 +718,11 @@
     // Refill from deck
     state.board[tier][slot] = state.decks[tier].shift() || null;
 
+    SFX.recruit();
+    if (playerIdx === 0) SFX.haptics.success();
     await animateBuy(playerIdx, { tier, slot }, card);
     renderSupply();
-    renderBoard();
+    renderBoard({ flipSlots: [{ tier, slot }] });
     renderPlayer(playerIdx);
     renderTeams();
     showToast(`${player.name} recruited ${card.hero}!`, 'success');
@@ -684,6 +739,8 @@
     player.bonuses[card.bonus] = (player.bonuses[card.bonus] || 0) + 1;
     player.prestige += card.prestige;
 
+    SFX.recruit();
+    if (playerIdx === 0) SFX.haptics.success();
     await animateBuy(playerIdx, { reserved: true, idx }, card);
     renderSupply();
     renderPlayer(playerIdx);
@@ -710,9 +767,11 @@
       player.stones.reality = (player.stones.reality || 0) + 1;
       await animateGather(playerIdx, ['reality']);
     }
+    SFX.reserve();
+    if (playerIdx === 0) SFX.haptics.success();
     await animateReserve(playerIdx, { tier, slot }, card);
     renderSupply();
-    renderBoard();
+    renderBoard(slot >= 0 ? { flipSlots: [{ tier, slot }] } : {});
     renderPlayer(playerIdx);
     renderReservedDrawer();
     showToast(`${player.name} reserved a ${slot === -1 ? 'Tier ' + tier : ''} hero`, 'success');
@@ -733,6 +792,8 @@
       player.teams.push(claimed.team);
       player.prestige += claimed.team.prestige;
       state.teams.splice(claimed.idx, 1);
+      SFX.teamClaim();
+      if (playerIdx === 0) SFX.haptics.victory();
       await animateTeamClaim(playerIdx, claimed.team);
       renderTeams();
       renderPlayer(playerIdx);
@@ -770,6 +831,8 @@
     state.turn = 0;
     setActiveTurnIndicator();
     updateSelectionInfo();
+    SFX.turnChime();
+    SFX.haptics.tap();
     state.busy = false;
   }
 
@@ -831,15 +894,20 @@
       title.style.backgroundClip = 'text';
       sub.textContent = `You triumphed over ${p1.name}.`;
       launchConfetti();
+      SFX.victory();
+      SFX.haptics.victory();
     } else if (winnerIdx === 1) {
       title.textContent = 'DEFEAT';
       title.style.background = 'linear-gradient(180deg, #ff6464 0%, #800 100%)';
       title.style.webkitBackgroundClip = 'text';
       title.style.backgroundClip = 'text';
       sub.textContent = `${p1.name} achieved cosmic dominance.`;
+      SFX.defeat();
+      SFX.haptics.error();
     } else {
       title.textContent = 'STALEMATE';
       sub.textContent = 'A balance of cosmic power.';
+      SFX.turnChime();
     }
 
     stats.innerHTML = `
@@ -852,10 +920,34 @@
   }
 
   // ---------- Animations ----------
+  function spawnParticle(stone, x, y) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.dataset.stone = stone;
+    p.style.left = (x - 3) + 'px';
+    p.style.top = (y - 3) + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 14 + Math.random() * 18;
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    $('#fx-layer').appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+
   async function animateGather(playerIdx, stones) {
     const fxLayer = $('#fx-layer');
     const target = playerIdx === 0 ? $('#panel-you') : $('#panel-opponent');
     const targetRect = target.getBoundingClientRect();
+
+    if (!state.animsOn) {
+      // skip animation, just bump the resources
+      for (const s of stones) {
+        const prefix = playerIdx === 0 ? 'you' : 'opp';
+        const resEl = document.getElementById(`res-${prefix}-${s}`);
+        if (resEl) { resEl.classList.remove('bumped'); void resEl.offsetWidth; resEl.classList.add('bumped'); }
+      }
+      return;
+    }
 
     const promises = [];
     for (let i = 0; i < stones.length; i++) {
@@ -881,7 +973,17 @@
             fly.style.transform = `translate(${dx}px, ${dy}px) scale(0.6)`;
             fly.style.opacity = '0.2';
           }, i * 80);
+          // Spawn trailing particles every ~70ms during flight
+          let particleTimer = null;
+          const startAt = 50 + i * 80;
           setTimeout(() => {
+            particleTimer = setInterval(() => {
+              const r = fly.getBoundingClientRect();
+              spawnParticle(stone, r.left + r.width/2, r.top + r.height/2);
+            }, 60);
+          }, startAt);
+          setTimeout(() => {
+            if (particleTimer) clearInterval(particleTimer);
             fly.remove();
             // bump the resource
             const prefix = playerIdx === 0 ? 'you' : 'opp';
@@ -914,6 +1016,17 @@
     const target = playerIdx === 0 ? $(`#res-you-${card.bonus}`) : $(`#res-opp-${card.bonus}`);
     if (!target) return;
     const tRect = target.getBoundingClientRect();
+    const burstColor = STONE_META[card.bonus]?.color || '#ffd400';
+
+    if (!state.animsOn) {
+      // skip flight; just fire a brief burst
+      fireHeroBurst(sRect.left + sRect.width/2, sRect.top + sRect.height/2, burstColor);
+      target.classList.remove('bumped'); void target.offsetWidth; target.classList.add('bumped');
+      return;
+    }
+
+    // Hero entrance burst at the card's origin position
+    fireHeroBurst(sRect.left + sRect.width/2, sRect.top + sRect.height/2, burstColor);
 
     const ghost = document.createElement('div');
     ghost.className = 'fly-card';
@@ -937,6 +1050,23 @@
     target.classList.remove('bumped');
     void target.offsetWidth;
     target.classList.add('bumped');
+  }
+
+  function fireHeroBurst(x, y, color) {
+    const fxLayer = $('#fx-layer');
+    const burst = document.createElement('div');
+    burst.className = 'hero-burst';
+    burst.style.left = x + 'px';
+    burst.style.top = y + 'px';
+    burst.style.setProperty('--burst-color', color);
+    fxLayer.appendChild(burst);
+    const ring = document.createElement('div');
+    ring.className = 'hero-burst-ring';
+    ring.style.left = x + 'px';
+    ring.style.top = y + 'px';
+    ring.style.setProperty('--burst-color', color);
+    fxLayer.appendChild(ring);
+    setTimeout(() => { burst.remove(); ring.remove(); }, 1000);
   }
 
   async function animateReserve(playerIdx, src, card) {
