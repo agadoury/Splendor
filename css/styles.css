@@ -1123,3 +1123,244 @@ button { font-family: inherit; cursor: pointer; }
 .board::-webkit-scrollbar { width: 6px; }
 .board::-webkit-scrollbar-track { background: transparent; }
 .board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* =========================================================
+   Card hover tooltip (desktop only — pointer:fine)
+   ========================================================= */
+.card-tooltip {
+  position: fixed;
+  z-index: 90;
+  pointer-events: none;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 180px;
+  max-width: 240px;
+  font-size: 12px;
+  color: var(--ink);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.6), 0 0 24px rgba(180,80,255,0.15);
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.card-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.card-tooltip .tt-head {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.card-tooltip .tt-emoji { font-size: 22px; }
+.card-tooltip .tt-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 3px 0;
+  color: var(--ink-dim);
+}
+.card-tooltip .tt-row b { color: var(--ink); font-weight: 700; }
+.card-tooltip .tt-cost {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+.card-tooltip .tt-pip {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid currentColor;
+}
+.card-tooltip .tt-pip[data-stone="power"]   { color: var(--power-color); }
+.card-tooltip .tt-pip[data-stone="space"]   { color: var(--space-color); }
+.card-tooltip .tt-pip[data-stone="time"]    { color: var(--time-color); }
+.card-tooltip .tt-pip[data-stone="mind"]    { color: var(--mind-color); }
+.card-tooltip .tt-pip[data-stone="soul"]    { color: var(--soul-color); }
+.card-tooltip .tt-bonus {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.4);
+  font-size: 11px; font-weight: 700;
+  border: 1px solid currentColor;
+}
+
+.kbd {
+  display: inline-block;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--border);
+  color: var(--ink-dim);
+  margin-left: 6px;
+}
+
+/* Subtle keyboard hint pip on supply tokens (desktop) */
+.supply-token .kbd-hint {
+  position: absolute;
+  bottom: 4px; left: 4px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  color: rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.55);
+  border-radius: 4px;
+  padding: 1px 4px;
+  pointer-events: none;
+  display: none;
+}
+
+/* =========================================================
+   Hover effects (only when fine pointer / hover capable)
+   ========================================================= */
+@media (hover: hover) and (pointer: fine) {
+  .card { cursor: pointer; transition: transform .2s cubic-bezier(.2,.9,.3,1.2), box-shadow .25s ease, filter .2s ease; }
+  .card:not(.card-empty):hover {
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: 0 16px 30px rgba(0,0,0,0.55), 0 0 22px rgba(180,140,255,0.35);
+    z-index: 4;
+  }
+  .card.affordable:not(.card-empty):hover {
+    box-shadow: 0 16px 32px rgba(0,0,0,0.55), 0 0 26px rgba(255,212,0,0.7);
+    filter: brightness(1.08);
+  }
+  .supply-token { cursor: pointer; transition: transform .15s ease, box-shadow .2s ease, filter .2s ease; }
+  .supply-token:not(.empty):hover {
+    transform: translateY(-4px) scale(1.06);
+    filter: brightness(1.1);
+  }
+  .deck:not(.empty) { cursor: pointer; transition: transform .2s ease, box-shadow .25s ease; }
+  .deck:not(.empty):hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.4), 0 0 18px rgba(255,212,0,0.4);
+  }
+  .team { cursor: default; transition: transform .2s ease; }
+  .team:hover { transform: translateY(-3px); }
+  .icon-btn:hover { background: rgba(60,30,100,0.6); }
+  .btn:not(:disabled):hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .diff-btn:hover { background: rgba(60,30,100,0.6); }
+  .reserved-btn:hover { background: rgba(80,40,140,0.7); }
+  .switch:hover::after { box-shadow: 0 0 10px rgba(255,212,0,0.3); }
+  .supply-token .kbd-hint { display: block; }
+}
+
+/* =========================================================
+   Desktop layout (>=1024px) — 3-column grid
+   ========================================================= */
+@media (min-width: 1024px) {
+  body { overflow: hidden; } /* full-viewport game shell */
+
+  .game {
+    max-width: 1400px;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0 auto;
+    padding: 10px 14px 14px;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 220px;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "topbar  topbar topbar"
+      "opp     teams  supply"
+      "you     board  supply"
+      "actions actions actions";
+    column-gap: 14px;
+    row-gap: 10px;
+    box-sizing: border-box;
+  }
+
+  .topbar { grid-area: topbar; position: relative; top: auto; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 0; }
+  .player-panel.opponent { grid-area: opp; margin: 0; }
+  .player-panel.you { grid-area: you; margin: 0; align-self: end; }
+  .teams-row { grid-area: teams; margin: 0; padding: 0; }
+  .board { grid-area: board; padding: 0; min-height: 0; }
+  .supply { grid-area: supply; padding: 0; grid-template-columns: 1fr; grid-auto-rows: minmax(72px, auto); align-content: start; gap: 10px; max-height: 100%; overflow: hidden; }
+  .action-bar { grid-area: actions; margin: 0; border-radius: 12px; position: relative; bottom: auto; }
+
+  /* Supply tokens become bigger circles in a vertical stack */
+  .supply-token { aspect-ratio: 2.4 / 1; border-radius: 16px; padding: 0 14px; flex-direction: row; justify-content: space-between; }
+  .supply-token .tk-symbol { font-size: 30px; }
+  .supply-token .tk-count {
+    position: static;
+    width: 36px; height: 36px;
+    background: rgba(0,0,0,0.5);
+    font-size: 14px;
+    border: 1px solid var(--border-bright);
+  }
+  .supply-token .selection-bubble { top: -8px; left: -8px; }
+  .supply-token .kbd-hint { bottom: auto; top: 6px; left: 6px; }
+
+  /* Players are wider with bigger resources */
+  .player-panel { padding: 12px 14px; border-radius: 14px; }
+  .player-resources { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .player-resources .resource { aspect-ratio: 1.8 / 1; border-radius: 10px; }
+  .player-resources .resource .res-symbol { font-size: 18px; }
+  .player-resources .resource .res-counts { font-size: 13px; }
+  .player-avatar { width: 52px; height: 52px; font-size: 28px; }
+  .player-name { font-size: 16px; }
+  .player-stats { font-size: 13px; }
+  .player-stats .prestige { font-size: 17px; }
+
+  /* Bigger cards on desktop */
+  .tier { grid-template-columns: 38px 78px 1fr; gap: 10px; }
+  .tier-cards { gap: 10px; }
+  .tier-label { font-size: 18px; }
+  .deck { font-size: 14px; }
+  .deck .deck-count { font-size: 22px; }
+  .card { font-size: 13px; padding: 8px 7px 7px; }
+  .card-name { font-size: 11px; }
+  .card-art { font-size: 44px; margin: 4px 0; }
+  .card-bonus { width: 28px; height: 28px; font-size: 16px; }
+  .card-prestige { font-size: 20px; }
+  .cost-pip { width: 20px; height: 20px; font-size: 11px; }
+
+  .teams-row { gap: 10px; }
+  .team { width: 92px; padding: 10px 8px; }
+  .team-emoji { font-size: 26px; }
+  .team-name { font-size: 10px; }
+  .team-prestige { width: 24px; height: 24px; font-size: 13px; }
+
+  .action-bar { padding: 10px 16px; }
+  .selection-info { font-size: 14px; }
+  .btn.small { padding: 12px 20px; font-size: 13px; }
+
+  /* Reserved drawer becomes a centered modal-ish floater */
+  .drawer {
+    left: 50%; right: auto; bottom: 50%;
+    width: 580px; max-width: calc(100vw - 40px);
+    transform: translate(-50%, 50%) scale(0.92);
+    border-radius: 18px;
+    border: 1px solid var(--border-bright);
+    transition: transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .25s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .drawer.open {
+    transform: translate(-50%, 50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Settings sheet remains anchored to top-right */
+  .settings-sheet { top: 64px; right: 18px; }
+
+  /* Splash gets a bit more breathing room */
+  .splash-inner { max-width: 560px; padding: 48px 24px; }
+}
+
+/* Very large screens: make supply tokens slightly larger */
+@media (min-width: 1280px) {
+  .game { grid-template-columns: 300px minmax(0, 1fr) 240px; }
+  .card-art { font-size: 48px; }
+  .card-name { font-size: 12px; }
+}
+.board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

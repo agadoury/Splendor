@@ -107,7 +107,191 @@
     try { const v = localStorage.getItem('splendor.anims'); if (v !== null) state.animsOn = (v === '1'); } catch (e) {}
     $('#toggle-anims').classList.toggle('on', state.animsOn);
 
+    setupKeyboardShortcuts();
+    setupTooltip();
     SFX.init();
+  }
+
+  // ---------- Keyboard shortcuts (desktop) ----------
+  function setupKeyboardShortcuts() {
+    const keyToStone = { '1': 'power', '2': 'space', '3': 'time', '4': 'mind', '5': 'soul' };
+    document.addEventListener('keydown', (e) => {
+      // Ignore if typing in an input
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      // Ignore if a modal is up
+      if ($('#rules').classList.contains('active') || $('#endgame').classList.contains('active')) {
+        if (e.key === 'Escape') {
+          $('#rules').classList.remove('active');
+        }
+        return;
+      }
+      // Splash: Enter starts the game
+      if ($('#splash').classList.contains('active')) {
+        if (e.key === 'Enter') { e.preventDefault(); startGame(); }
+        return;
+      }
+      if (state.busy || state.turn !== 0) return;
+
+      if (keyToStone[e.key]) {
+        e.preventDefault();
+        onSupplyClick(keyToStone[e.key]);
+      } else if (e.key === 'Enter') {
+        if (!$('#btn-confirm').disabled) {
+          e.preventDefault();
+          SFX.haptics.confirm();
+          confirmSelection();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        SFX.deselect();
+        cancelSelection();
+        $('#reserved-drawer').classList.remove('open');
+        $('#settings-sheet').classList.remove('open');
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        SFX.tap();
+        $('#reserved-drawer').classList.toggle('open');
+      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        $('#rules').classList.add('active');
+      }
+    });
+  }
+
+  // ---------- Hover tooltip (desktop) ----------
+  let _tooltipEl = null;
+  let _tooltipShowTimer = null;
+  function setupTooltip() {
+    // Only on devices with hover/fine pointer
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+    const board = $('#board');
+    const drawer = $('#reserved-drawer');
+    const teamsRow = $('#teams-row');
+
+    const onEnter = (e) => {
+      const cardEl = e.target.closest('.card[data-hero]');
+      const teamEl = e.target.closest('.team');
+      if (cardEl) {
+        clearTimeout(_tooltipShowTimer);
+        _tooltipShowTimer = setTimeout(() => showCardTooltip(cardEl), 220);
+      } else if (teamEl) {
+        clearTimeout(_tooltipShowTimer);
+        _tooltipShowTimer = setTimeout(() => showTeamTooltip(teamEl), 220);
+      }
+    };
+    const onLeave = (e) => {
+      if (!e.target.closest('.card,.team')) return;
+      clearTimeout(_tooltipShowTimer);
+      hideTooltip();
+    };
+    const onMove = (e) => {
+      if (_tooltipEl && _tooltipEl.classList.contains('visible')) {
+        positionTooltip(e.clientX, e.clientY);
+      }
+    };
+
+    [board, drawer, teamsRow].forEach(host => {
+      host.addEventListener('mouseover', onEnter);
+      host.addEventListener('mouseout', onLeave);
+      host.addEventListener('mousemove', onMove);
+    });
+  }
+
+  function ensureTooltipEl() {
+    if (_tooltipEl) return _tooltipEl;
+    _tooltipEl = document.createElement('div');
+    _tooltipEl.className = 'card-tooltip';
+    document.body.appendChild(_tooltipEl);
+    return _tooltipEl;
+  }
+
+  function findCardByHeroName(name) {
+    for (const t of [1,2,3]) {
+      const c = CARDS[t].find(c => c.hero === name);
+      if (c) return c;
+    }
+    return null;
+  }
+
+  function showCardTooltip(cardEl) {
+    const heroName = cardEl.dataset.hero;
+    const card = findCardByHeroName(heroName);
+    if (!card) return;
+    const meta = STONE_META[card.bonus];
+    const me = state.players[0];
+    const costHtml = STONES.filter(s => card.cost[s]).map(s => {
+      const cost = card.cost[s];
+      const bonus = me.bonuses[s] || 0;
+      const have = me.stones[s] || 0;
+      const need = Math.max(0, cost - bonus);
+      const unmet = need > have;
+      return `<span class="tt-pip" data-stone="${s}" style="${unmet?'opacity:.5':''}">${cost}</span>`;
+    }).join('');
+
+    const tt = ensureTooltipEl();
+    tt.innerHTML = `
+      <div class="tt-head">
+        <span class="tt-emoji">${card.emoji}</span>
+        <span>${card.hero}</span>
+      </div>
+      <div class="tt-row"><span>Tier</span><b>${card.tier}</b></div>
+      <div class="tt-row"><span>Prestige</span><b>★ ${card.prestige}</b></div>
+      <div class="tt-row"><span>Bonus</span>
+        <span class="tt-bonus" style="color:${meta.color}">${meta.symbol} ${meta.name}</span>
+      </div>
+      <div class="tt-cost">${costHtml || '<span style="color:var(--ink-dim)">No cost</span>'}</div>
+    `;
+    const r = cardEl.getBoundingClientRect();
+    positionTooltip(r.left + r.width/2, r.top);
+    requestAnimationFrame(() => tt.classList.add('visible'));
+  }
+
+  function showTeamTooltip(teamEl) {
+    const teamName = teamEl.querySelector('.team-name')?.textContent;
+    const team = state.teams.find(t => t.name === teamName);
+    if (!team) return;
+    const me = state.players[0];
+    const reqHtml = STONES.filter(s => team.req[s]).map(s => {
+      const need = team.req[s];
+      const have = me.bonuses[s] || 0;
+      const ok = have >= need;
+      return `<span class="tt-pip" data-stone="${s}" style="${ok?'box-shadow:0 0 8px currentColor':'opacity:.6'}">${have}/${need}</span>`;
+    }).join('');
+    const tt = ensureTooltipEl();
+    tt.innerHTML = `
+      <div class="tt-head">
+        <span class="tt-emoji">${team.emoji}</span>
+        <span>${team.name}</span>
+      </div>
+      <div class="tt-row"><span>Joins for</span><b>★ ${team.prestige}</b></div>
+      <div class="tt-row" style="display:block; margin-top:4px; color:var(--ink-dim); font-size:11px;">
+        Required hero bonuses:
+      </div>
+      <div class="tt-cost">${reqHtml}</div>
+    `;
+    const r = teamEl.getBoundingClientRect();
+    positionTooltip(r.left + r.width/2, r.bottom + 8);
+    requestAnimationFrame(() => tt.classList.add('visible'));
+  }
+
+  function positionTooltip(x, y) {
+    if (!_tooltipEl) return;
+    const tt = _tooltipEl;
+    const ttRect = tt.getBoundingClientRect();
+    const w = ttRect.width || 220;
+    const h = ttRect.height || 140;
+    let left = x - w/2;
+    let top = y - h - 14;
+    if (top < 8) top = y + 18;
+    if (left < 8) left = 8;
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    tt.style.left = left + 'px';
+    tt.style.top = top + 'px';
+  }
+
+  function hideTooltip() {
+    if (_tooltipEl) _tooltipEl.classList.remove('visible');
   }
 
   function startGame() {
@@ -175,6 +359,7 @@
     const supply = $('#supply');
     supply.innerHTML = '';
     const order = ['power','space','time','mind','soul','reality'];
+    const keyHints = { power:'1', space:'2', time:'3', mind:'4', soul:'5', reality:'' };
     for (const stone of order) {
       const count = state.supply[stone] || 0;
       const tok = document.createElement('button');
@@ -182,9 +367,12 @@
       tok.dataset.stone = stone;
       tok.id = `supply-${stone}`;
       if (count <= 0) tok.classList.add('empty');
+      tok.title = STONE_META[stone].name + (keyHints[stone] ? ` (key ${keyHints[stone]})` : '');
+      const hint = keyHints[stone] ? `<span class="kbd-hint">${keyHints[stone]}</span>` : '';
       tok.innerHTML = `
         <span class="tk-symbol">${STONE_META[stone].symbol}</span>
         <span class="tk-count">${count}</span>
+        ${hint}
       `;
       tok.addEventListener('click', () => onSupplyClick(stone));
       supply.appendChild(tok);
