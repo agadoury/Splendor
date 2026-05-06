@@ -482,6 +482,17 @@ button { font-family: inherit; cursor: pointer; }
 .resource.bumped { animation: bump .5s ease; }
 @keyframes bump { 0%,100%{transform:scale(1);} 30%{transform:scale(1.18);} }
 
+/* When a card is selected to summon, highlight which essences will be spent. */
+.resource.spending {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+  animation: spendPulse 1.4s ease-in-out infinite;
+}
+@keyframes spendPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(200, 170, 110, 0.5), inset 0 0 8px rgba(200, 170, 110, 0.2); }
+  50%      { box-shadow: 0 0 16px rgba(200, 170, 110, 0.95), inset 0 0 12px rgba(200, 170, 110, 0.4); }
+}
+
 /* =========================================================
    Teams (Nobles)
    ========================================================= */
@@ -1531,7 +1542,22 @@ button { font-family: inherit; cursor: pointer; }
 .cost-pip[data-stone="time"]    { --gem-1: #76ffb1; --gem-2: #006b2f; color:#fff; }
 .cost-pip[data-stone="mind"]    { --gem-1: #ffe27c; --gem-2: #6b4f00; color:#1a1100; }
 .cost-pip[data-stone="soul"]    { --gem-1: #d99cff; --gem-2: #4a0080; color:#fff; }
-.cost-pip.unmet { opacity: 0.45; filter: saturate(0.4) drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.cost-pip.unmet { opacity: 0.42; filter: saturate(0.35) drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+
+/* Covered entirely by your owned-card bonuses — green halo + check glyph */
+.cost-pip.covered-bonus {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6))
+          drop-shadow(0 0 5px rgba(47,217,122,0.85));
+  color: #d6ffe0;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.7);
+  font-size: 10px;
+}
+.cost-pip.covered-bonus[data-stone="mind"] { color: #0a3315; }
+/* Need to spend from hand, but you have enough — gold pulse so it pops */
+.cost-pip.covered-hand {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6))
+          drop-shadow(0 0 4px rgba(255, 220, 120, 0.7));
+}
 
 /* Prestige stamp — embossed star on tier-graded badge */
 .card-prestige {

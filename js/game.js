@@ -510,8 +510,19 @@
       const bonus = me.bonuses[stone] || 0;
       const have = me.stones[stone] || 0;
       const stillNeed = Math.max(0, cost - bonus);
-      const unmet = stillNeed > have;
-      return `<span class="cost-pip ${unmet ? 'unmet' : ''}" data-stone="${stone}">${cost}</span>`;
+      let stateClass, display;
+      if (stillNeed === 0) {
+        stateClass = 'covered-bonus';
+        display = '✓';
+      } else if (stillNeed <= have) {
+        stateClass = 'covered-hand';
+        display = stillNeed;
+      } else {
+        stateClass = 'unmet';
+        display = stillNeed;
+      }
+      const tip = `${STONE_META[stone].name}: cost ${cost} − ${bonus} bonus = ${stillNeed} from hand (you have ${have})`;
+      return `<span class="cost-pip ${stateClass}" data-stone="${stone}" title="${tip}">${display}</span>`;
     }).join('');
 
     el.innerHTML = `
@@ -945,6 +956,48 @@
 
     updateSelectionInfo();
     refreshAffordability();
+    refreshSpendingPreview();
+  }
+
+  // Visualize which essences in your panel would be spent for the selected card.
+  function getSelectedCard() {
+    const sel = state.selection;
+    if (sel.buyTier !== null && sel.buySlot !== null) {
+      return state.board[sel.buyTier]?.[sel.buySlot] || null;
+    }
+    if (sel.buyReservedIdx !== null) {
+      return state.players[0].reserved[sel.buyReservedIdx] || null;
+    }
+    return null;
+  }
+
+  function computeSpending(player, card) {
+    const out = { power:0, space:0, time:0, mind:0, soul:0, reality:0 };
+    let wildNeeded = 0;
+    for (const s of STONES) {
+      const cost = card.cost[s] || 0;
+      const bonus = player.bonuses[s] || 0;
+      const need = Math.max(0, cost - bonus);
+      const fromColor = Math.min(player.stones[s] || 0, need);
+      out[s] = fromColor;
+      if (need > fromColor) wildNeeded += (need - fromColor);
+    }
+    out.reality = wildNeeded;
+    return out;
+  }
+
+  function refreshSpendingPreview() {
+    $$('#you-resources .resource').forEach(el => el.classList.remove('spending', 'spending-empty'));
+    const card = getSelectedCard();
+    if (!card || state.turn !== 0) return;
+    const me = state.players[0];
+    const spending = computeSpending(me, card);
+    for (const s of STONES.concat(['reality'])) {
+      if (spending[s] > 0) {
+        const tile = $(`#res-you-${s}`);
+        if (tile) tile.classList.add('spending');
+      }
+    }
   }
 
   function updateSelectionInfo() {
