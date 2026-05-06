@@ -645,13 +645,13 @@ button { font-family: inherit; cursor: pointer; }
 }
 .card:active { transform: scale(0.96); }
 .card.affordable {
-  border-color: var(--accent-2);
-  box-shadow: 0 0 14px rgba(255,212,0,0.45);
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(3, 151, 171, 0.55);
 }
 .card.affordable::after {
   content: ''; position: absolute; inset: -2px; border-radius: 12px;
-  border: 1px solid var(--accent-2);
-  opacity: 0.5;
+  border: 1.5px solid var(--accent);
+  opacity: 0.7;
   pointer-events: none;
   animation: ringpulse 1.6s ease-in-out infinite;
 }
@@ -1368,11 +1368,11 @@ button { font-family: inherit; cursor: pointer; }
   100% { transform: rotateY(0) scale(1); opacity: 1; }
 }
 
-/* Affordable card pulse already exists; intensify with shimmer sweep */
+/* Affordable card pulse already exists; intensify with a Hextech sheen */
 .card.affordable::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255,212,0,0.18) 50%, transparent 70%);
+  background: linear-gradient(115deg, transparent 30%, rgba(3, 151, 171, 0.20) 50%, transparent 70%);
   background-size: 200% 100%;
   animation: shimmerSweep 2.4s linear infinite;
   pointer-events: none;
@@ -1553,10 +1553,10 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 10px;
 }
 .cost-pip.covered-bonus[data-stone="mind"] { color: #0a3315; }
-/* Need to spend from hand, but you have enough — gold pulse so it pops */
+/* Need to spend from hand, but you have enough — pip stays vibrant
+   (vibrant = you can pay; the dimmed unmet state is the contrast). */
 .cost-pip.covered-hand {
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6))
-          drop-shadow(0 0 4px rgba(255, 220, 120, 0.7));
+  /* No extra glow; the gem's full saturation already signals "ready to pay". */
 }
 
 /* Prestige stamp — embossed star on tier-graded badge */
